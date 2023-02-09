@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Configuration;
 
 namespace ApiRessource2
 {
@@ -18,7 +19,7 @@ namespace ApiRessource2
 
             builder.Services.AddDbContext<DataContext>(
                 options => {
-                    string mySqlConnectionStr = "server = mysql-onf.alwaysdata.net; database = onf_resourcedev; user = onf_test; password = adminressource; Connect Timeout = 300";
+                    string mySqlConnectionStr = builder.Configuration.GetConnectionString("connectionString");
                     options.UseMySql(mySqlConnectionStr, MariaDbServerVersion.AutoDetect(mySqlConnectionStr));
         });
         var app = builder.Build();

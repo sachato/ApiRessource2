@@ -78,6 +78,7 @@ namespace ApiRessource2.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(User user)
         {
+            user.Password = Services.Tools.HashCode(user.Password);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
