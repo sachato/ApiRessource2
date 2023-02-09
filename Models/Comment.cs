@@ -8,8 +8,8 @@ namespace ApiRessource2.Models
             public int Id { get; set; }
             public DateTime DatePost { get; set; }
             public string Content { get; set; }
-            public bool IdDeleted { get; set; }
-            public int IdRessource { get; set; }
-            public int IdUser { get; set; }
+            public bool IsDeleted { get; set; }
+            public int RessourceId { get; set; }
+            public int UserId { get; set; }
     }
 }

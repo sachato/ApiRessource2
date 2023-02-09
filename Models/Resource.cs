@@ -14,7 +14,7 @@ namespace ApiRessource2.Models
         public int UpVote { get; set; }
         public int DownVote { get; set; }
         public TypeRessource Type { get; set; }
-        public int IdUser { get; set; }
+        public int UserId { get; set; }
         
     }
 }
