@@ -7,15 +7,15 @@ namespace ApiRessource2
     public class DataContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public DbSet<Resource> Resources { get; set; }
         public DataContext()
         {
 
         }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public DataContext(DbContextOptions<DataContext> options)
+            : base(options)
         {
-            string mySqlConnectionStr = "server = mysql-onf.alwaysdata.net; database = onf_ressources; user = onf_test; password = adminressource; Connect Timeout = 300";
-            optionsBuilder.UseMySql(mySqlConnectionStr, ServerVersion.AutoDetect(mySqlConnectionStr));
-        }
 
+        }
     }
 }
