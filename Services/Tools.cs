@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using ApiRessource2.Helpers;
+using ApiRessource2.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Configuration;
 using System.IdentityModel.Tokens.Jwt;
@@ -12,7 +15,6 @@ namespace ApiRessource2.Services
 {
     public static class Tools
     {
-
         public static string HashCode(string password)
         {
             var token = new JwtSecurityToken();

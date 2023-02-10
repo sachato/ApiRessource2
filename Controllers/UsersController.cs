@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiRessource2;
 using ApiRessource2.Models;
+using ApiRessource2.Services;
+//using ApiRessource2.Migrations;
+using ApiRessource2.Models;
 
 namespace ApiRessource2.Controllers
 {
@@ -15,11 +18,31 @@ namespace ApiRessource2.Controllers
     public class UsersController : ControllerBase
     {
         private readonly DataContext _context;
+        private IUserService _userService;
 
-        public UsersController(DataContext context)
+        public UsersController(DataContext context, IUserService userService)
         {
             _context = context;
+            _userService = userService;
         }
+
+
+        [HttpPost("authenticate")]
+        public IActionResult Authenticate(AuthenticateRequest model)
+        {
+            var user = _context.Users.SingleOrDefault(x => x.Email == model.Email);
+            if (user == null)
+                return BadRequest(new { message = "Username or password is incorrect" });
+
+            var token = _userService.Authenticate(model, user);
+
+            if (token == null)
+                return BadRequest(new { message = "Username or password is incorrect" });
+
+            return Ok(token);
+        }
+
+
 
         // GET: api/Users
         [HttpGet]
