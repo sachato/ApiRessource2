@@ -18,6 +18,7 @@ namespace ApiRessource2.Services
             var token = new JwtSecurityToken();
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
             return passwordHash;
+
         }
     }
 }
