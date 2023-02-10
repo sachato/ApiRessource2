@@ -88,6 +88,7 @@ namespace ApiRessource2.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteConsultation(int id)
         {
+
             var consultation = await _context.Consultations.FindAsync(id);
             if (consultation == null)
             {
