@@ -22,6 +22,7 @@ namespace ApiRessource2
 
             builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
             builder.Services.AddScoped<IUserService, UserService>();
+            
             ConfigurationHelper.Initialize(builder.Configuration);
             builder.Services.AddDbContext<DataContext>(
                 options => {
@@ -40,6 +41,8 @@ namespace ApiRessource2
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
+
+            app.UseMiddleware<JwtMiddleware>();
 
 
             app.MapControllers();

@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ApiRessource2;
 using ApiRessource2.Models;
 using ApiRessource2.Services;
 //using ApiRessource2.Migrations;
-using ApiRessource2.Models;
+using ApiRessource2.Helpers;
 
 namespace ApiRessource2.Controllers
 {
@@ -26,7 +25,7 @@ namespace ApiRessource2.Controllers
             _userService = userService;
         }
 
-
+        
         [HttpPost("authenticate")]
         public IActionResult Authenticate(AuthenticateRequest model)
         {
@@ -45,6 +44,7 @@ namespace ApiRessource2.Controllers
 
 
         // GET: api/Users
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
@@ -52,6 +52,7 @@ namespace ApiRessource2.Controllers
         }
 
         // GET: api/Users/5
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
@@ -67,6 +68,7 @@ namespace ApiRessource2.Controllers
 
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, User user)
         {
@@ -98,6 +100,7 @@ namespace ApiRessource2.Controllers
 
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(User user)
         {
@@ -109,6 +112,7 @@ namespace ApiRessource2.Controllers
         }
 
         // DELETE: api/Users/5
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
