@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using ApiRessource2.Models;
 using ApiRessource2.Helpers;
+using Microsoft.AspNetCore.Identity;
 
 public interface IUserService
 {
@@ -37,7 +38,7 @@ public class UserService : IUserService
         //var userverif = _users.SingleOrDefault(x => x.Email == model.Email);
         if (user == null)
             return null;
-        if(user.Email == user.Email && user.Password == user.Password)
+        if(model.Email == user.Email && BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
         {
             // authentication successful so generate jwt token
             var token = generateJwtToken(user);
