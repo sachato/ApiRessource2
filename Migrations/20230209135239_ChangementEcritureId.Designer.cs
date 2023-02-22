@@ -219,7 +219,7 @@ namespace ApiRessource2.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("Role")
+                    b.Property<int>("int")
                         .HasColumnType("int");
 
                     b.Property<int>("ZoneGeoId")

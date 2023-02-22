@@ -47,14 +47,23 @@ namespace ApiRessource2.Controllers
         // PUT: api/Resources/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutResource(int id, Resource resource)
+        public async Task<IActionResult> PutComment(int id, Comment comment)
         {
-            if (id != resource.Id)
+            if (id != comment.Id)
             {
-                return BadRequest();
+                return BadRequest("L'ID fourni dans l'URL ne correspond pas à l'ID de l'entité.");
             }
 
-            _context.Entry(resource).State = EntityState.Modified;
+            var commentToUpdate = await _context.Comments.FindAsync(id);
+
+            if (commentToUpdate == null)
+            {
+                return NotFound("Le commentaire n'a pas été trouvé.");
+            }
+
+            // Mettre à jour les propriétés du commentaire existant avec les nouvelles valeurs
+            commentToUpdate.Content = comment.Content;
+            commentToUpdate.DatePost = DateTime.Now;
 
             try
             {
@@ -62,18 +71,12 @@ namespace ApiRessource2.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ResourceExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+
             }
 
             return NoContent();
         }
+
 
         // POST: api/Resources
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754

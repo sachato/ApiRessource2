@@ -11,5 +11,6 @@ namespace ApiRessource2.Models
             public bool IsDeleted { get; set; }
             public int RessourceId { get; set; }
             public int UserId { get; set; }
+            //public int CommentReplyId { get; set; }
     }
 }
