@@ -31,14 +31,25 @@ namespace ApiRessource2.Controllers
         [HttpGet]
         public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter)
         {
-            var route = Request.Path.Value;
-            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
-            var resource = await _context.Resources.Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
-               .Take(validFilter.PageSize)
-               .ToListAsync();
-            var totalRecords = await _context.Resources.CountAsync();
-            var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
-            return Ok(pagedReponse);
+            var resource = new List<Resource>();
+            try
+            {
+                var route = Request.Path.Value;
+                var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+                resource = await _context.Resources
+                   .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                   .Take(validFilter.PageSize)
+                   .ToListAsync();
+                var totalRecords = await _context.Resources.CountAsync();
+                var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
+                return Ok(pagedReponse);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
+            
         }
 
         // GET: api/Resources/5
@@ -60,19 +71,24 @@ namespace ApiRessource2.Controllers
 
         // GET: api/Resources/search/dkad dazk
         [HttpGet("search/{search}")]
-        public async Task<ActionResult<IEnumerable<Resource>>> GetFiltredResource(string search)
+        public async Task<IActionResult> GetFiltredResource([FromQuery] PaginationFilter filter, string search)
         {
-            //var resource = await _context.Resources.FindAsync(id);
-            var resource = await _context.Resources.Where(r=>r.Title.Contains(search)).ToListAsync();
-            /* var resource = _context.Resources.Where(e=>e.Id == id).FirstOrDefault();*/
-            /*var resource = new Resource { Id = 1, Title="ta mere",  Description="la pute", CreationDate = DateTime.Now, Path = "Path", DownVote = 1, UpVote = 2, IdUser = 32, IsDeleted=false, Type=TypeRessource.Lien};*/
+            var route = Request.Path.Value;
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+            var resource = await _context.Resources
+                .Where(r=>r.Title.ToLower().Contains(search.ToLower()))
+                .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                .Take(validFilter.PageSize)
+                .ToListAsync();
 
             if (resource == null)
             {
                 return NotFound();
             }
 
-            return resource;
+            var totalRecords = await _context.Resources.CountAsync();
+            var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
+            return Ok(pagedReponse);
         }
 
 
