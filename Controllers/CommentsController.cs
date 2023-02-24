@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ApiRessource2;
 using ApiRessource2.Models;
-using ApiRessource2.Migrations;
-using System.Globalization;
+using ApiRessource2.Helpers;
+using System;
 
 namespace ApiRessource2.Controllers
 {
@@ -23,110 +17,194 @@ namespace ApiRessource2.Controllers
             _context = context;
         }
 
-        // GET: api/Comments
-        [HttpGet("GetAllComment")]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetComments()
-        {
-            return await _context.Comments.Where(c => c.IsDeleted == false).ToListAsync();
-        }
-
-        // GET: api/Comments/5
-        [HttpGet("GetCommentById{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Comment>> GetComment(int id)
         {
             var comment = await _context.Comments.Where(c => c.IsDeleted == false).FirstOrDefaultAsync(c => c.Id == id);
 
             if (comment == null)
-            {
-                return NotFound();
-            }
+                return NotFound("Comment not found.");
 
             return comment;
         }
 
-        [HttpGet("GetAllCommentsByIdRessource/{ressourceId}")]
+        [HttpGet("getallcommentsbyidressource/{ressourceId}")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Comment>>> GetAllCommentsByIdRessource(int ressourceId)
         {
-            var ressourceComments = await _context.Comments.Where(c => c.IsDeleted == false && c.RessourceId == ressourceId).ToListAsync();
-            if (!ressourceComments.Any())
+            var ressourceComments = await _context.Comments
+                .Where(c => !c.IsDeleted && c.RessourceId == ressourceId)
+                .ToListAsync();
+
+            if (ressourceComments.Count == 0)
             {
-                return NotFound();
+                return NotFound("Les ressources n'ont pas été trouvées");
             }
 
             return ressourceComments;
         }
 
-        [HttpGet("GetAllCommentsByIdUser/{userId}")]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetAllCommentsByIdUser(int userId)
+        [HttpGet("getallcommentsbyiduser")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<Comment>>> GetAllCommentsByIdUser()
         {
-            var userComments = await _context.Comments.Where(c => c.IsDeleted == false && c.Id == userId).ToListAsync();
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            var userComments = await _context.Comments
+                .Where(c => c.IsDeleted == false && c.UserId == userId)
+                .ToListAsync();
+
             if (!userComments.Any())
-            {
-                return NotFound();
-            }
+                return NotFound("Les commentaires n'ont pas été trouvés");
 
             return userComments;
         }
 
 
-        // PUT: api/Comments/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> PutComment(int id, Comment comment)
         {
-            var isModerator = _context.Users.Where(r => r.Id == id && ((r.Role == (Role)0) || (r.Role == (Role)1) || (r.Role == (Role)2))).Any();
-            var isOwner = _context.Comments.Where(c => c.Id == id && c.UserId == id).Any();
-            var isDeleted = _context.Comments.Where(c => c.Id == id && c.IsDeleted == false).Any();
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = AuthenticateResponse.GetUserIdFromToken(token);
 
+            if (userId == 0)
+                return NotFound("L'utilisateur n'a pas été trouvé.");
+
+            var authorizationResult = await VerifyAuthorization(comment, userId);
+            if (authorizationResult != null)
+                return authorizationResult;
+
+            // Vérifier que l'id de l'entité à mettre à jour correspond à celui fourni dans l'URL
             if (id != comment.Id)
-                return BadRequest();
+            {
+                return BadRequest("L'ID fourni dans l'URL ne correspond pas à l'ID de l'entité.");
+            }
 
-            if (!isModerator || !isOwner || !isDeleted)
-                return Unauthorized();
+            // Récupérer le commentaire correspondant à l'id dans la base de données
+            var commentToUpdate = await _context.Comments.FindAsync(id);
 
-            _context.Entry(comment).State = EntityState.Modified;
+            if (commentToUpdate == null)
+            {
+                return NotFound("Le commentaire n'a pas été trouvé.");
+            }
+
+            // Mettre à jour les propriétés du commentaire récupéré avec les nouvelles valeurs
+            commentToUpdate.Content = comment.Content;
+
+            _context.Entry(commentToUpdate).State = EntityState.Modified;
 
             try
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException  )
+            catch (DbUpdateConcurrencyException)
             {
+
+                return NotFound();
+
             }
 
-            return NoContent();
+            return Ok(commentToUpdate);
         }
 
-        // POST: api/Comments
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<Comment>> PostComment(Comment comment)
         {
+            var ressourceExists = await _context.Resources.AnyAsync(r => r.Id == comment.RessourceId);
+            if (ressourceExists)
+                return BadRequest("La ressource n'existe pas dans la base de données.");
+
+
+            if (string.IsNullOrEmpty(comment.Content))
+                return BadRequest("Le contenu du commentaire est obligatoire.");
+
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+
+            comment.DatePost = DateTime.Now;
+            comment.UserId = userId;
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetComment", new { id = comment.Id }, comment);
+            return Ok(comment);
         }
 
-        // DELETE: api/Comments/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteComment(Comment Comments)
+        [HttpPost("reply/{commentId}")]
+        [Authorize]
+        public async Task<ActionResult<Comment>> PostCommentReply(int commentId, Comment reply)
         {
-            var isModerator = _context.Users.Where(r => r.Id == Comments.UserId && ((r.Role == (Role)0) || (r.Role == (Role)1) || (r.Role == (Role)2))).Any();
-            var isOwner = _context.Comments.Where(c => c.Id == Comments.Id && c.UserId == Comments.UserId).Any();
-            var isDeleted = _context.Comments.Where(c => c.Id == Comments.Id && c.IsDeleted == false).Any();
-            var comment = await _context.Comments.FindAsync(Comments.Id);
-            
-            if (Comments == null)
-                return NotFound();
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = AuthenticateResponse.GetUserIdFromToken(token);
 
-            if ((!isModerator || !isOwner) && !isDeleted)
-                return Unauthorized();
-            
-            _context.Comments.Remove(comment);
+            var parentComment = await _context.Comments.FindAsync(commentId);
+            if (parentComment == null)
+                return NotFound("Le commentaire parent n'a pas été trouvé.");
+
+            if (string.IsNullOrEmpty(reply.Content))
+                return BadRequest("Le contenu de la réponse est obligatoire.");
+
+            var ressourceExists = await _context.Resources.AnyAsync(r => r.Id == parentComment.RessourceId);
+            if (!ressourceExists)
+                return BadRequest("La ressource n'existe pas dans la base de données.");
+
+            _context.Comments.Add(new Comment
+            {
+                DatePost = DateTime.Now,
+                Content = reply.Content,
+                IsDeleted = false,
+                RessourceId = parentComment.RessourceId,
+                UserId = userId,
+                //CommentReplyId = commentId // L'ID du commentaire parent
+            });
+
+            await _context.SaveChangesAsync();
+
+            return Ok(reply);
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteComment(int id)
+        {
+            var comment = await _context.Comments.FindAsync(id);
+            if (comment == null)
+                return NotFound("Le commentaire n'a pas été trouvé.");
+
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+
+            if (userId == 0)
+                return NotFound("L'utilisateur n'a pas été trouvé.");
+
+            var authorizationResult = await VerifyAuthorization(comment, userId);
+            if (authorizationResult != null)
+                return authorizationResult;
+
+            comment.IsDeleted = true;
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
+        private async Task<IActionResult> VerifyAuthorization(Comment comment, int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            var isModerator = user != null && (user.Role == Role.Administrator || user.Role == Role.Moderator || user.Role == Role.SuperAdministrator);
+            var isOwner = comment.UserId == userId;
+            var isDeleted = !comment.IsDeleted;
+
+            if (!isDeleted)
+                return NotFound("Le commentaire que vous essayez de mettre à jour a été supprimé");
+
+            if (!isModerator && !isOwner)
+                return Unauthorized("Vous n'êtes pas autorisé à modifier ce commentaire.");
+
+            return null;
+        }
     }
 }
+
+
+

@@ -1,5 +1,5 @@
 namespace ApiRessource2.Helpers;
-
+using System.Windows;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -43,8 +43,13 @@ public class JwtMiddleware
                 ClockSkew = TimeSpan.Zero
             }, out SecurityToken validatedToken);
 
+          
+
             var jwtToken = (JwtSecurityToken)validatedToken;
-            var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
+            var userId = int.Parse(jwtToken.Claims.FirstOrDefault(claim => claim.Type == "id")?.Value);
+
+           
+
 
             // attach user to context on successful jwt validation
             context.Items["User"] = userService.GetById(userId);
