@@ -28,8 +28,17 @@ namespace ApiRessource2
                 options => {
                     string mySqlConnectionStr = builder.Configuration.GetConnectionString("connectionString");
                     options.UseMySql(mySqlConnectionStr, MariaDbServerVersion.AutoDetect(mySqlConnectionStr));
-        });
-        var app = builder.Build();
+            });
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddSingleton<IUriService>(o =>
+            {
+                var accessor = o.GetRequiredService<IHttpContextAccessor>();
+                var request = accessor.HttpContext.Request;
+                var uri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
+                return new UriService(uri);
+            });
+
+            var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiRessource2;
 using ApiRessource2.Models;
+using ApiRessource2.Models.Wrapper;
+using ApiRessource2.Models.Filter;
+using ApiRessource2.Helpers;
+using ApiRessource2.Services;
 
 namespace ApiRessource2.Controllers
 {
@@ -15,17 +19,26 @@ namespace ApiRessource2.Controllers
     public class ResourcesController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly IUriService uriService;
 
-        public ResourcesController(DataContext context)
+        public ResourcesController(DataContext context, IUriService uriService)
         {
             _context = context;
+            this.uriService = uriService;
         }
 
         // GET: api/Resources
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Resource>>> GetResources()
+        public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter)
         {
-            return await _context.Resources.ToListAsync();
+            var route = Request.Path.Value;
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+            var resource = await _context.Resources.Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+               .Take(validFilter.PageSize)
+               .ToListAsync();
+            var totalRecords = await _context.Resources.CountAsync();
+            var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
+            return Ok(pagedReponse);
         }
 
         // GET: api/Resources/5
@@ -43,6 +56,25 @@ namespace ApiRessource2.Controllers
 
             return resource;
         }
+
+
+        // GET: api/Resources/search/dkad dazk
+        [HttpGet("search/{search}")]
+        public async Task<ActionResult<IEnumerable<Resource>>> GetFiltredResource(string search)
+        {
+            //var resource = await _context.Resources.FindAsync(id);
+            var resource = await _context.Resources.Where(r=>r.Title.Contains(search)).ToListAsync();
+            /* var resource = _context.Resources.Where(e=>e.Id == id).FirstOrDefault();*/
+            /*var resource = new Resource { Id = 1, Title="ta mere",  Description="la pute", CreationDate = DateTime.Now, Path = "Path", DownVote = 1, UpVote = 2, IdUser = 32, IsDeleted=false, Type=TypeRessource.Lien};*/
+
+            if (resource == null)
+            {
+                return NotFound();
+            }
+
+            return resource;
+        }
+
 
         // PUT: api/Resources/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754

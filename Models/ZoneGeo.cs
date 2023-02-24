@@ -7,5 +7,6 @@ namespace ApiRessource2.Models
         [Key]
         public string NomCommune { get; set; }
         public int CodePostale { get; set; }
+
     }
 }
