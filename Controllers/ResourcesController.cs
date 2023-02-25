@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiRessource2;
 using ApiRessource2.Models;
+using ApiRessource2.Models.Wrapper;
+using ApiRessource2.Models.Filter;
+using ApiRessource2.Helpers;
+using ApiRessource2.Services;
 
 namespace ApiRessource2.Controllers
 {
@@ -15,17 +19,37 @@ namespace ApiRessource2.Controllers
     public class ResourcesController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly IUriService uriService;
 
-        public ResourcesController(DataContext context)
+        public ResourcesController(DataContext context, IUriService uriService)
         {
             _context = context;
+            this.uriService = uriService;
         }
 
         // GET: api/Resources
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Resource>>> GetResources()
+        public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter)
         {
-            return await _context.Resources.ToListAsync();
+            var resource = new List<Resource>();
+            try
+            {
+                var route = Request.Path.Value;
+                var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+                resource = await _context.Resources
+                   .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                   .Take(validFilter.PageSize)
+                   .ToListAsync();
+                var totalRecords = await _context.Resources.CountAsync();
+                var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
+                return Ok(pagedReponse);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
+            
         }
 
         // GET: api/Resources/5
@@ -44,17 +68,50 @@ namespace ApiRessource2.Controllers
             return resource;
         }
 
+
+        // GET: api/Resources/search/dkad dazk
+        [HttpGet("search/{search}")]
+        public async Task<IActionResult> GetFiltredResource([FromQuery] PaginationFilter filter, string search)
+        {
+            var route = Request.Path.Value;
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+            var resource = await _context.Resources
+                .Where(r=>r.Title.ToLower().Contains(search.ToLower()))
+                .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                .Take(validFilter.PageSize)
+                .ToListAsync();
+
+            if (resource == null)
+            {
+                return NotFound();
+            }
+
+            var totalRecords = await _context.Resources.CountAsync();
+            var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
+            return Ok(pagedReponse);
+        }
+
+
         // PUT: api/Resources/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutResource(int id, Resource resource)
+        public async Task<IActionResult> PutComment(int id, Comment comment)
         {
-            if (id != resource.Id)
+            if (id != comment.Id)
             {
-                return BadRequest();
+                return BadRequest("L'ID fourni dans l'URL ne correspond pas à l'ID de l'entité.");
             }
 
-            _context.Entry(resource).State = EntityState.Modified;
+            var commentToUpdate = await _context.Comments.FindAsync(id);
+
+            if (commentToUpdate == null)
+            {
+                return NotFound("Le commentaire n'a pas été trouvé.");
+            }
+
+            // Mettre à jour les propriétés du commentaire existant avec les nouvelles valeurs
+            commentToUpdate.Content = comment.Content;
+            commentToUpdate.DatePost = DateTime.Now;
 
             try
             {
@@ -62,18 +119,12 @@ namespace ApiRessource2.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ResourceExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+
             }
 
             return NoContent();
         }
+
 
         // POST: api/Resources
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754

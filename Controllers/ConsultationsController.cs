@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ApiRessource2;
 using ApiRessource2.Models;
+using System.Security.Claims;
+using ApiRessource2.Helpers;
+using System.Linq;
+using ApiRessource2.Migrations;
 
 namespace ApiRessource2.Controllers
 {
@@ -22,78 +20,90 @@ namespace ApiRessource2.Controllers
         }
 
         // GET: api/Consultations
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Consultation>>> GetConsultations()
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<Consultation>>> getAllconsultationsbyid(int id)
         {
-            return await _context.Consultations.ToListAsync();
+            return _context.Consultations.Where(c => c.Id == id).ToList();
+
         }
 
         // GET: api/Consultations/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Consultation>> GetConsultation(int id)
+        [HttpGet("getallconsultationsbyiduser")]
+        [Authorize]
+        public async Task<ActionResult<Consultation>> GetConsultationById(int id)
         {
-            var consultation = await _context.Consultations.FindAsync(id);
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+
+            var consultation = await _context.Consultations.Where(c => c.UserId == userId).ToListAsync();
+            if (consultation == null)
+                return NotFound("L'utilisateur n'a pas été trouvé.");
 
             if (consultation == null)
-            {
-                return NotFound();
-            }
+                return NotFound("Le favoris que vous essayez de mettre à jour a été supprimé");
 
-            return consultation;
+            return Ok(consultation);
+            ;
         }
 
         // PUT: api/Consultations/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutConsultation(int id, Consultation consultation)
+        [Authorize]
+        public async Task<IActionResult> PutConsultation(int id)
         {
-            if (id != consultation.Id)
-            {
-                return BadRequest();
-            }
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            if (userId == null)
+                return NotFound("L'utilisateur n'a pas été trouvé.");
+
+            Consultation consultation = _context.Consultations.Where(c => c.Id == id && c.UserId == userId).FirstOrDefault();
+            if (consultation == null)
+                return NotFound("La consultation que vous essayez de mettre à jour n'a pas été trouvée.");
+
+            var authorizationResult = await VerifyAuthorization(consultation);
+            if (authorizationResult != null)
+                return authorizationResult;
+
+            consultation.Date = DateTime.Now;
+            consultation.UserId = userId;
+
 
             _context.Entry(consultation).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ConsultationExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(consultation);
         }
 
         // POST: api/Consultations
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Consultation>> PostConsultation(Consultation consultation)
+        [Authorize]
+        public async Task<ActionResult<Consultation>> PostConsultation(Consultation consultation, int RessourceId)
         {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            if (userId == null)
+                return NotFound("L'utilisateur n'a pas été trouvé.");
+
+            consultation.RessourceId = RessourceId;
+            consultation.Date = DateTime.Now;
+            consultation.UserId = userId;
             _context.Consultations.Add(consultation);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetConsultation", new { id = consultation.Id }, consultation);
+            return Ok(consultation);
         }
 
         // DELETE: api/Consultations/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteConsultation(int id)
+        [Authorize]
+        public async Task<IActionResult> DeleteConsultation(Consultation consultation)
         {
-
-            var consultation = await _context.Consultations.FindAsync(id);
-            if (consultation == null)
-            {
-                return NotFound();
-            }
+            var authorizationResult = await VerifyAuthorization(consultation);
+            if (authorizationResult != null)
+                return authorizationResult;
 
             _context.Consultations.Remove(consultation);
             await _context.SaveChangesAsync();
@@ -101,9 +111,24 @@ namespace ApiRessource2.Controllers
             return NoContent();
         }
 
-        private bool ConsultationExists(int id)
+        private async Task<IActionResult> VerifyAuthorization(Consultation consultation)
         {
-            return _context.Consultations.Any(e => e.Id == id);
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            if (userId == null)
+                return NotFound("L'utilisateur n'a pas été trouvé.");
+
+            if (consultation == null)
+                return NotFound("La consultation que vous essayez de Supprimer a deja été supprimé");
+
+            var user = await _context.Users.FindAsync(userId);
+            var isModerator = user != null && (user.Role == Role.Administrator || user.Role == Role.Moderator || user.Role == Role.SuperAdministrator);
+            var isOwner = _context.Consultations.Any(c => c.Id == consultation.Id && c.UserId == (userId));
+
+            if (!isModerator && !isOwner)
+                return Unauthorized("Vous n'êtes pas autorisé à supprimer cette consultation.");
+
+            return NoContent();
         }
     }
 }

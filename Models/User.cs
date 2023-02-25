@@ -15,5 +15,6 @@
         public bool IsDeleted { get; set; }
         public Role Role { get; set; }
         public int ZoneGeoId { get; set; }
+
     }
 }

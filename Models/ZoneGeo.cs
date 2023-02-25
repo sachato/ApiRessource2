@@ -1,9 +1,12 @@
-﻿namespace ApiRessource2.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ApiRessource2.Models
 {
     public class ZoneGeo
     {
-        public int Id { get; set; }
-        public int Code { get; set; }
-        public string Name { get; set; }
+        [Key]
+        public string NomCommune { get; set; }
+        public int CodePostale { get; set; }
+
     }
 }
