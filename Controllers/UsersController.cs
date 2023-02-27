@@ -29,6 +29,10 @@ namespace ApiRessource2.Controllers
         [HttpPost("authenticate")]
         public IActionResult Authenticate(AuthenticateRequest model)
         {
+            if (!Tools.IsEmailValid(model.Email))
+            {
+                return BadRequest(new { message = "Username or password is incorrect" });
+            }
             var user = _context.Users.SingleOrDefault(x => x.Email == model.Email);
             if (user == null)
                 return BadRequest(new { message = "Username or password is incorrect" });
@@ -104,7 +108,14 @@ namespace ApiRessource2.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(User user)
         {
-            user.Password = Services.Tools.HashCode(user.Password);
+            if (!Tools.IsEmailValid(user.Email))
+                return BadRequest("Une adresse mail valide doit etre rentré.");
+            if (!Tools.IsValidPhoneNumber(user.PhoneNumber))
+                return BadRequest("Un numéro de téléphone valide doit etre rentré et doit respecter ce format : +33XXXXXXX .");
+            if (!Tools.IsValidPassword(user.Password))
+                return BadRequest("Le mot de passe ne convient pas car il ne contient pas : 1 majuscule, 1 minuscule, 1 chiffre, 1 caractère spécial et 8 caractère minimum.");
+            //TODO: vérifier si email et pseudo unique, a faire dans la base en modifiant les class peut etre ?
+            user.Password = Tools.HashCode(user.Password);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
