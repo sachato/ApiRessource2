@@ -47,6 +47,12 @@ namespace ApiRessource2
                 app.UseSwaggerUI();
             }
 
+            if (app.Environment.IsProduction())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
             app.UseCors(builder =>
             {
                 builder
