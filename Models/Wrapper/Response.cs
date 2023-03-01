@@ -8,7 +8,7 @@
         }
 
 
-        public Response(T data, string[] error = null)
+        public Response(T data,string message, string[] error = null)
         {
             if (error == null)
             {
@@ -20,7 +20,7 @@
                 Succeeded = false;
                 Errors = error;
             }   
-            Message = string.Empty;
+            Message = message;
             Data = data;
         }
 

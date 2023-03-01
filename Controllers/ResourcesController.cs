@@ -11,6 +11,7 @@ using ApiRessource2.Models.Wrapper;
 using ApiRessource2.Models.Filter;
 using ApiRessource2.Helpers;
 using ApiRessource2.Services;
+using NuGet.Packaging;
 
 namespace ApiRessource2.Controllers
 {
@@ -39,6 +40,7 @@ namespace ApiRessource2.Controllers
                 resource = await _context.Resources
                    .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
                    .Take(validFilter.PageSize)
+                   .Where(r=>r.IsDeleted == false)
                    .ToListAsync();
                 var totalRecords = await _context.Resources.CountAsync();
                 var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
@@ -54,18 +56,28 @@ namespace ApiRessource2.Controllers
 
         // GET: api/Resources/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Resource>> GetResource(int id)
+        public async Task<IActionResult> GetResource(int id)
         {
-            var resource = await _context.Resources.FindAsync(id);
-            /* var resource = _context.Resources.Where(e=>e.Id == id).FirstOrDefault();*/
-            /*var resource = new Resource { Id = 1, Title="ta mere",  Description="la pute", CreationDate = DateTime.Now, Path = "Path", DownVote = 1, UpVote = 2, IdUser = 32, IsDeleted=false, Type=TypeRessource.Lien};*/
-
-            if (resource == null)
+            try
             {
-                return NotFound();
-            }
+                var resource = await _context.Resources.FindAsync(id);
+                if (resource == null)
+                {
+                    string[] errorList = new string[] { $"La ressource {id} n'a pas été trouvée ou n'existe pas." };
+                    Response<Resource> responseNotFound = new Response<Resource>(null, $"La ressource {id} n'a pas été trouvée ou n'existe pas.");
+                    return NotFound(responseNotFound);
+                }
 
-            return resource;
+                Response<Resource> response = new Response<Resource>(resource, $"La ressource {id} a été trouvée.");
+                return Ok(response);
+
+            }
+            catch(Exception ex)
+            {
+                Response<Resource> response = new Response<Resource>(null, ex.Message);
+                return BadRequest(response);
+            }
+            
         }
 
 
@@ -76,6 +88,7 @@ namespace ApiRessource2.Controllers
             var route = Request.Path.Value;
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
             var resource = await _context.Resources
+                .Where(r=>r.IsDeleted == false)
                 .Where(r=>r.Title.ToLower().Contains(search.ToLower()))
                 .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
                 .Take(validFilter.PageSize)
@@ -95,34 +108,43 @@ namespace ApiRessource2.Controllers
         // PUT: api/Resources/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutComment(int id, Comment comment)
+        public async Task<IActionResult> PutResource(int id, Resource resource)
         {
-            if (id != comment.Id)
+            if (id != resource.Id)
             {
                 return BadRequest("L'ID fourni dans l'URL ne correspond pas à l'ID de l'entité.");
             }
 
-            var commentToUpdate = await _context.Comments.FindAsync(id);
+            var resourceToUpdate = await _context.Resources.FindAsync(id);
 
-            if (commentToUpdate == null)
+            if (resourceToUpdate == null)
             {
                 return NotFound("Le commentaire n'a pas été trouvé.");
             }
 
             // Mettre à jour les propriétés du commentaire existant avec les nouvelles valeurs
-            commentToUpdate.Content = comment.Content;
-            commentToUpdate.DatePost = DateTime.Now;
+            resourceToUpdate.Title = resource.Title;
+            resourceToUpdate.Description = resource.Description;
+            resourceToUpdate.CreationDate = resource.CreationDate;
+            resourceToUpdate.Path = resource.Path;
+            resourceToUpdate.IsDeleted = resource.IsDeleted;
+            resourceToUpdate.UpVote = resource.UpVote;
+            resourceToUpdate.DownVote = resource.DownVote;
+            resourceToUpdate.Type = resource.Type;
+            resourceToUpdate.UserId = resource.UserId;
 
             try
             {
+                _context.Update(resourceToUpdate);
                 await _context.SaveChangesAsync();
+                return Ok();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-
+                return BadRequest();
             }
 
-            return NoContent();
+
         }
 
 
