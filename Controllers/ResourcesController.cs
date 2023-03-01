@@ -29,18 +29,29 @@ namespace ApiRessource2.Controllers
 
         // GET: api/Resources
         [HttpGet]
-        public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter)
+        public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter, TriType triType)
         {
             var resource = new List<Resource>();
             try
             {
                 var route = Request.Path.Value;
                 var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
-                resource = await _context.Resources
+                var query = _context.Resources
                    .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
                    .Take(validFilter.PageSize)
-                   .Include(r=>r.User)
-                   .ToListAsync();
+                   .Include(r => r.User)
+                   .AsQueryable();
+
+                if(triType == TriType.Alphabetique)
+                {
+                    resource = await query.OrderBy(q => q.Title).ToListAsync();
+                }
+                else
+                {
+                    resource = await query.OrderByDescending(q => q.CreationDate).ToListAsync();
+                }
+
+
                 var totalRecords = await _context.Resources.CountAsync();
                 var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
                 return Ok(pagedReponse);
@@ -155,7 +166,7 @@ namespace ApiRessource2.Controllers
 
         // PUT: api/Resources/upvote/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("upvote/{id}")]
+        [HttpPut("upvote")]
         public async Task<IActionResult> upvote(int idresource, int iduser)
         {
             if (idresource == null || idresource == 0 || iduser == null || iduser == 0)
@@ -174,6 +185,10 @@ namespace ApiRessource2.Controllers
                 }
 
                 resourceToUpdate.UpVote++;
+                voted = new Voted(){};
+                voted.RessourceId = idresource;
+                voted.UserId = iduser;
+                _context.Voteds.Add(voted);
                 _context.Update(resourceToUpdate);
 
 
@@ -193,6 +208,56 @@ namespace ApiRessource2.Controllers
             }
 
             
+
+            return NoContent();
+        }
+
+
+
+        // PUT: api/Resources/upvote/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("downvote/{id}")]
+        public async Task<IActionResult> downvote(int idresource, int iduser)
+        {
+            if (idresource == null || idresource == 0 || iduser == null || iduser == 0)
+            {
+                return BadRequest("La ressource est introuvable.");
+            }
+
+            var voted = await _context.Voteds.Where(v => v.UserId == iduser).Where(v => v.RessourceId == idresource).FirstOrDefaultAsync();
+            if (voted == null)
+            {
+                var resourceToUpdate = await _context.Resources.FindAsync(idresource);
+
+                if (resourceToUpdate == null)
+                {
+                    return NotFound("La ressource est introuvable.");
+                }
+
+                resourceToUpdate.DownVote++;
+                voted = new Voted() { };
+                voted.RessourceId = idresource;
+                voted.UserId = iduser;
+                _context.Voteds.Add(voted);
+                _context.Update(resourceToUpdate);
+
+
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+
+                }
+            }
+            else
+            {
+                return BadRequest("Vous avez deja aimé cette ressource.");
+            }
+
+
 
             return NoContent();
         }
