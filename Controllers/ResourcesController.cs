@@ -46,9 +46,17 @@ namespace ApiRessource2.Controllers
                 {
                     resource = await query.OrderBy(q => q.Title).ToListAsync();
                 }
-                else
+                if (triType == TriType.Popularité)
                 {
-                    resource = await query.OrderByDescending(q => q.CreationDate).ToListAsync();
+                    resource = await query.OrderByDescending(q => q.UpVote).ToListAsync();
+                }
+                if (triType == TriType.DateAsc)
+                {
+                    resource = await query.OrderBy(q => q.CreationDate.Date).ThenBy(q=>q.CreationDate.TimeOfDay).ToListAsync();
+                }
+                if (triType == TriType.DateDesc)
+                {
+                    resource = await query.OrderByDescending(q => q.CreationDate).ThenBy(q => q.CreationDate.TimeOfDay).ToListAsync();
                 }
 
 
