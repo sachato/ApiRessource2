@@ -4,7 +4,7 @@ namespace ApiRessource2.Models
 {
     public class ZoneGeo
     {
-        [Key]
+        public int Id { get; set; }
         public string NomCommune { get; set; }
         public int CodePostale { get; set; }
     }
