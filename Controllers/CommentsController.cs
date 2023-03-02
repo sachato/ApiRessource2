@@ -165,8 +165,7 @@ namespace ApiRessource2.Controllers
         }
 
         [HttpDelete("{id}")]
-        //TODO: exemple
-        [NewAuthorize(Role.Moderator)]
+        [Authorize(Role.Moderator)]
         public async Task<IActionResult> DeleteComment(int id)
         {
             var comment = await _context.Comments.FindAsync(id);

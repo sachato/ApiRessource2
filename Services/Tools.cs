@@ -34,7 +34,7 @@ namespace ApiRessource2.Services
         }
         public static bool IsValidPassword(string password)
         {
-            Regex regex = new(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$");
+            Regex regex = new(@"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
             return regex.IsMatch(password);
         }
     }
