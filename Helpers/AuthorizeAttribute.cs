@@ -4,15 +4,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using ApiRessource2.Models;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class AuthorizeAttribute : Attribute, IAuthorizationFilter
 {
+    public Role[] Roles { get; set; } = new Role[] { Role.User, Role.Moderator, Role.Administrator, Role.SuperAdministrator};
+    public AuthorizeAttribute(params Role[] roles) 
+    { 
+        Roles = roles;
+    }
     public void OnAuthorization(AuthorizationFilterContext context)
     {
         var user = (User)context.HttpContext.Items["User"];
-        if (user == null)
+        // Si array.indexOf == -1 cela veut dire que le role de l'utilisateur n'est pas pas roles.
+        if (user == null || Array.IndexOf(Roles, user.Role) == -1)
         {
-            // not logged in
             context.Result = new JsonResult(new { message = "Unauthorized" }) { StatusCode = StatusCodes.Status401Unauthorized };
         }
     }
