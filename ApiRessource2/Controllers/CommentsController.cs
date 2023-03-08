@@ -12,7 +12,7 @@ namespace ApiRessource2.Controllers
     {
         private readonly DataContext _context;
 
-        public CommentsController(DataContext context) p
+        public CommentsController(DataContext context)
         {
             _context = context;
         }
