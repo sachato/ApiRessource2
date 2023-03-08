@@ -18,7 +18,7 @@ namespace ApiRessource2.Test
         [InlineData(" ", false)]
         [InlineData("+330625256595", false)]
         [InlineData("+53625256599", false)]
-        [InlineData(null, false)]
+        [InlineData(null, false)]   
         public void IsValidPhoneNumber(string telephoneNumber, bool expected)
         {
             //Initialisation
