@@ -29,8 +29,15 @@ namespace ApiRessource2.Services
         }
         public static bool IsValidPhoneNumber(string phoneNumber)
         {
-            Regex regex = new(@"^([\+]?33[-]?|[0])?[1-9][0-9]{8}$");
-            return regex.IsMatch(phoneNumber);
+            try
+            {
+                Regex regex = new(@"^([\+]?33[-]?|[0])?[1-9][0-9]{8}$");
+                return regex.IsMatch(phoneNumber);
+            }
+            catch
+            {
+                return false;
+            }
         }
         public static bool IsValidPassword(string password)
         {
