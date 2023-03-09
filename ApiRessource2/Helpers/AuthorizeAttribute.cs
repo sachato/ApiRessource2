@@ -6,10 +6,13 @@ using ApiRessource2.Models;
 
 public class AuthorizeAttribute : Attribute, IAuthorizationFilter
 {
-    public Role[] Roles { get; set; } = new Role[] { Role.User, Role.Moderator, Role.Administrator, Role.SuperAdministrator};
-    public AuthorizeAttribute(params Role[] roles) 
+    private Role[] Roles { get; set; } = new Role[] { Role.User, Role.Moderator, Role.Administrator, Role.SuperAdministrator};
+    public AuthorizeAttribute(params Role[]? roles) 
     { 
-        Roles = roles;
+        if (roles.Length != 0)
+        {
+            Roles = roles;
+        }
     }
     public void OnAuthorization(AuthorizationFilterContext context)
     {
