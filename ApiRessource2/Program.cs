@@ -46,6 +46,11 @@ namespace ApiRessource2
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+                using (var scope = app.Services.CreateScope())
+                {
+                    (scope.ServiceProvider.GetRequiredService(typeof(DataContext)) as DataContext).Database.EnsureDeleted();
+                    (scope.ServiceProvider.GetRequiredService(typeof(DataContext)) as DataContext).Database.EnsureCreated();
+                }
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }

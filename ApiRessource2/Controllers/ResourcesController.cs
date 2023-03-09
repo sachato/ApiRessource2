@@ -198,19 +198,26 @@ namespace ApiRessource2.Controllers
         }
 
         // DELETE: api/Resources/5
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteResource(int id)
         {
             var resource = await _context.Resources.FindAsync(id);
-            if (resource == null)
+            User user = (User)HttpContext.Items["User"];
+            if (user.Id == resource.UserId || user.Role == Role.Administrator || user.Role == Role.SuperAdministrator)
             {
-                return NotFound();
+                if (resource == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Resources.Update(resource);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            _context.Resources.Update(resource);
-            await _context.SaveChangesAsync();
-
             return NoContent();
+            
         }
 
 
