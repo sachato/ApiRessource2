@@ -29,13 +29,27 @@ namespace ApiRessource2.Services
         }
         public static bool IsValidPhoneNumber(string phoneNumber)
         {
-            Regex regex = new(@"^([\+]?33[-]?|[0])?[1-9][0-9]{8}$");
-            return regex.IsMatch(phoneNumber);
+            try
+            {
+                Regex regex = new(@"^([\+]?33[-]?|[0])?[1-9][0-9]{8}$");
+                return regex.IsMatch(phoneNumber);
+            }
+            catch
+            {
+                return false;
+            }
         }
         public static bool IsValidPassword(string password)
         {
-            Regex regex = new(@"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
-            return regex.IsMatch(password);
+            try
+            {
+                // 1 majuscule, 1 minuscule, 1 caractère spécial, 1 chiffre et 12 caractères mini
+                Regex regex = new(@"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$");
+                return regex.IsMatch(password);
+            } catch
+            {
+                return false;
+            }
         }
     }
 }

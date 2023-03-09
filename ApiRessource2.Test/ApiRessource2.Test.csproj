@@ -21,4 +21,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ApiRessource2\ApiRessource2.csproj" />
+  </ItemGroup>
+
 </Project>
