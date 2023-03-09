@@ -12,6 +12,7 @@ namespace ApiRessource2.Test.Services
         [InlineData("op@AAAAAA2", false)]
         [InlineData("AAAAAAA@6432", false)]
         [InlineData("", false)]
+        [InlineData(" ", false)]
         [InlineData(null, false)]
         public void PasswordTest(string password, bool expected)
         {
