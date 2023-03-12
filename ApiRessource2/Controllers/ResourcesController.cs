@@ -83,17 +83,17 @@ namespace ApiRessource2.Controllers
                 if (resource == null)
                 {
                     string[] errorList = new string[] { $"La ressource {id} n'a pas été trouvée ou n'existe pas." };
-                    Response<Resource> responseNotFound = new Response<Resource>(null, $"La ressource {id} n'a pas été trouvée ou n'existe pas.");
+                    Response<Resource> responseNotFound = new(null, $"La ressource {id} n'a pas été trouvée ou n'existe pas.");
                     return NotFound(responseNotFound);
                 }
 
-                Response<Resource> response = new Response<Resource>(resource, $"La ressource {id} a été trouvée.");
+                Response<Resource> response = new(resource, $"La ressource {id} a été trouvée.");
                 return Ok(response);
 
             }
             catch(Exception ex)
             {
-                Response<Resource> response = new Response<Resource>(null, ex.Message);
+                Response<Resource> response = new(null, ex.Message);
                 return BadRequest(response);
             }
             
@@ -163,7 +163,7 @@ namespace ApiRessource2.Controllers
                 await _context.SaveChangesAsync();
                 return Ok();
             }
-            catch (Exception ex)
+            catch 
             {
                 return BadRequest();
             }
@@ -179,7 +179,7 @@ namespace ApiRessource2.Controllers
         public async Task<ActionResult<Resource>> PostResource(PostResource postresource)
         {
             User user = (User)HttpContext.Items["User"];
-            Resource resource = new Resource()
+            Resource resource = new()
             {
                 Title = postresource.Title,
                 Description = postresource.Description,
@@ -245,9 +245,11 @@ namespace ApiRessource2.Controllers
                 }
 
                 resourceToUpdate.UpVote++;
-                voted = new Voted() { };
-                voted.RessourceId = idresource;
-                voted.UserId = user.Id;
+                voted = new Voted
+                {
+                    RessourceId = idresource,
+                    UserId = user.Id
+                };
                 _context.Voteds.Add(voted);
                 _context.Update(resourceToUpdate);
 
@@ -298,9 +300,11 @@ namespace ApiRessource2.Controllers
                 }
 
                 resourceToUpdate.DownVote++;
-                voted = new Voted() { };
-                voted.RessourceId = idresource;
-                voted.UserId = user.Id;
+                voted = new Voted
+                {
+                    RessourceId = idresource,
+                    UserId = user.Id
+                };
                 _context.Voteds.Add(voted);
                 _context.Update(resourceToUpdate);
 

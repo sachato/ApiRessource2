@@ -48,8 +48,8 @@ namespace ApiRessource2.Controllers
         [Authorize]
         public async Task<ActionResult<IEnumerable<Comment>>> GetAllCommentsByIdUser()
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
             var userComments = await _context.Comments
                 .Where(c => c.IsDeleted == false && c.UserId == userId)
                 .ToListAsync();
@@ -65,13 +65,13 @@ namespace ApiRessource2.Controllers
         [Authorize]
         public async Task<IActionResult> PutComment(int id, Comment comment)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
 
             if (userId == 0)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
-            var authorizationResult = await VerifyAuthorization(comment, userId);
+            var authorizationResult = await VerifyAuthorization(comment);
             if (authorizationResult != null)
                 return authorizationResult;
 
@@ -120,8 +120,8 @@ namespace ApiRessource2.Controllers
             if (string.IsNullOrEmpty(comment.Content))
                 return BadRequest("Le contenu du commentaire est obligatoire.");
 
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
 
             comment.DatePost = DateTime.Now;
             comment.UserId = userId;
@@ -135,8 +135,8 @@ namespace ApiRessource2.Controllers
         [Authorize]
         public async Task<ActionResult<Comment>> PostCommentReply(int commentId, Comment reply)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
 
             var parentComment = await _context.Comments.FindAsync(commentId);
             if (parentComment == null)
@@ -172,13 +172,13 @@ namespace ApiRessource2.Controllers
             if (comment == null)
                 return NotFound("Le commentaire n'a pas été trouvé.");
 
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
 
             if (userId == 0)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
-            var authorizationResult = await VerifyAuthorization(comment, userId);
+            var authorizationResult = await VerifyAuthorization(comment);
             if (authorizationResult != null)
                 return authorizationResult;
 
@@ -188,9 +188,10 @@ namespace ApiRessource2.Controllers
             return NoContent();
         }
 
-        private async Task<IActionResult> VerifyAuthorization(Comment comment, int userId)
+        private async Task<IActionResult> VerifyAuthorization(Comment comment)
         {
-            var user = await _context.Users.FindAsync(userId);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
             var isModerator = user != null && (user.Role == Role.Administrator || user.Role == Role.Moderator || user.Role == Role.SuperAdministrator);
             var isOwner = comment.UserId == userId;
             var isDeleted = !comment.IsDeleted;

@@ -4,7 +4,6 @@ using ApiRessource2.Models;
 using System.Security.Claims;
 using ApiRessource2.Helpers;
 using System.Linq;
-using ApiRessource2.Migrations;
 
 namespace ApiRessource2.Controllers
 {
@@ -33,8 +32,8 @@ namespace ApiRessource2.Controllers
         [Authorize]
         public async Task<ActionResult<Consultation>> GetConsultationById(int id)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
 
             var consultation = await _context.Consultations.Where(c => c.UserId == userId).ToListAsync();
             if (consultation == null)
@@ -53,8 +52,8 @@ namespace ApiRessource2.Controllers
         [Authorize]
         public async Task<IActionResult> PutConsultation(int id)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
             if (userId == null)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
@@ -82,8 +81,8 @@ namespace ApiRessource2.Controllers
         [Authorize]
         public async Task<ActionResult<Consultation>> PostConsultation(Consultation consultation, int RessourceId)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
             if (userId == null)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
@@ -113,15 +112,14 @@ namespace ApiRessource2.Controllers
 
         private async Task<IActionResult> VerifyAuthorization(Consultation consultation)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
             if (userId == null)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
             if (consultation == null)
                 return NotFound("La consultation que vous essayez de Supprimer a deja été supprimé");
 
-            var user = await _context.Users.FindAsync(userId);
             var isModerator = user != null && (user.Role == Role.Administrator || user.Role == Role.Moderator || user.Role == Role.SuperAdministrator);
             var isOwner = _context.Consultations.Any(c => c.Id == consultation.Id && c.UserId == (userId));
 

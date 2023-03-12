@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiRessource2;
 using ApiRessource2.Models;
-using ApiRessource2.Migrations;
 using ApiRessource2.Helpers;
 using System.Security.Claims;
+using OpenQA.Selenium.DevTools;
 
 namespace ApiRessource2.Controllers
 {
@@ -38,28 +38,24 @@ namespace ApiRessource2.Controllers
             return Ok(favoris);
 
         }
-
         [HttpGet("getallfavorisbyiduser")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Favoris>>> GetAllFavorisByIdUser()
+        public async Task<ActionResult<Favoris>> GetAllFavorisByIdUser(int userId)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            var favoris = await _context.Favoris.FirstOrDefaultAsync(f => f.UserId == userId);
 
-            var favoris = await _context.Favoris.Where(f => f.UserId == userId).ToListAsync();
-
-            if (favoris == null)
+        if (favoris == null)
                 return Ok(favoris);
 
-            return favoris;
+            return Ok(favoris);
         }
 
         [HttpPost("{ressourceid}")]
         [Authorize]
         public async Task<ActionResult<Favoris>> PostFavoris(Favoris favoris, int RessourceId)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
             favoris.UserId = userId;
             favoris.RessourceId = RessourceId;
             _context.Favoris.Add(favoris);
@@ -73,8 +69,8 @@ namespace ApiRessource2.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteFavoris(int id)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var userId = AuthenticateResponse.GetUserIdFromToken(token);
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
 
             var favoris = await _context.Favoris.FindAsync(id); ;
 
@@ -84,11 +80,10 @@ namespace ApiRessource2.Controllers
             if (favoris == null)
                 return NotFound("Le favoris que vous essayez de mettre à jour a été supprimé");
 
-            var authorizationResult = await VerifyAuthorization(favoris, userId);
+            var authorizationResult = await VerifyAuthorization(favoris);
             if (authorizationResult != null)
                 return authorizationResult;
 
-            var user = await _context.Users.FindAsync(userId);
             var isOwner = _context.Favoris.Any(c => c.Id == favoris.Id && c.UserId == userId);
 
             if (!isOwner)
@@ -100,10 +95,10 @@ namespace ApiRessource2.Controllers
             return NoContent();
         }
 
-        private async Task<IActionResult> VerifyAuthorization(Favoris favoris, int userId)
+        private async Task<IActionResult> VerifyAuthorization(Favoris favoris)
         {
-            var user = await _context.Users.FindAsync(userId);
-
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
             var isModerator = user != null && (user.Role == Role.Administrator || user.Role == Role.Moderator || user.Role == Role.SuperAdministrator);
             var isOwner = favoris.UserId == userId;
 
