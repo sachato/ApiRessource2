@@ -79,7 +79,7 @@ namespace ApiRessource2.Controllers
         {
             try
             {
-                var resource = await _context.Resources.FindAsync(id);
+                var resource = await _context.Resources.Where(r=>r.Id == id).Include(r=>r.Comments).FirstOrDefaultAsync();
                 if (resource == null)
                 {
                     string[] errorList = new string[] { $"La ressource {id} n'a pas été trouvée ou n'existe pas." };

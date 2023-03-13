@@ -33,7 +33,7 @@ namespace ApiRessource2.Controllers
         public async Task<ActionResult<IEnumerable<Comment>>> GetAllCommentsByIdRessource(int ressourceId)
         {
             var ressourceComments = await _context.Comments
-                .Where(c => !c.IsDeleted && c.RessourceId == ressourceId)
+                .Where(c => !c.IsDeleted && c.ResourceId == ressourceId)
                 .ToListAsync();
 
             if (ressourceComments.Count == 0)
@@ -112,7 +112,7 @@ namespace ApiRessource2.Controllers
         [Authorize]
         public async Task<ActionResult<Comment>> PostComment(Comment comment)
         {
-            var ressourceExists = await _context.Resources.AnyAsync(r => r.Id == comment.RessourceId);
+            var ressourceExists = await _context.Resources.AnyAsync(r => r.Id == comment.ResourceId);
             if (ressourceExists)
                 return BadRequest("La ressource n'existe pas dans la base de données.");
 
@@ -145,7 +145,7 @@ namespace ApiRessource2.Controllers
             if (string.IsNullOrEmpty(reply.Content))
                 return BadRequest("Le contenu de la réponse est obligatoire.");
 
-            var ressourceExists = await _context.Resources.AnyAsync(r => r.Id == parentComment.RessourceId);
+            var ressourceExists = await _context.Resources.AnyAsync(r => r.Id == parentComment.ResourceId);
             if (!ressourceExists)
                 return BadRequest("La ressource n'existe pas dans la base de données.");
 
@@ -154,7 +154,7 @@ namespace ApiRessource2.Controllers
                 DatePost = DateTime.Now,
                 Content = reply.Content,
                 IsDeleted = false,
-                RessourceId = parentComment.RessourceId,
+                ResourceId = parentComment.ResourceId,
                 UserId = userId,
                 //CommentReplyId = commentId // L'ID du commentaire parent
             });

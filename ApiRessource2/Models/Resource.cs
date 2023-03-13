@@ -1,8 +1,9 @@
-﻿using System.Diagnostics.Eventing.Reader;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.Eventing.Reader;
 
 namespace ApiRessource2.Models
 {
-    public enum TypeRessource { Phonto, Lien, Texte, Document};
+    public enum TypeRessource { Photo, Lien, Texte, Document};
     public class Resource
     {
         public int Id { get; set; }
@@ -16,6 +17,9 @@ namespace ApiRessource2.Models
         public TypeRessource Type { get; set; }
         public int UserId { get; set; }
         public virtual User User { get; set; }
+
+        [ForeignKey("ResourceId")]
+        public virtual ICollection<Comment> Comments { get; set; }
         
     }
 }

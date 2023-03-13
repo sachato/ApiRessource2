@@ -9,8 +9,8 @@ namespace ApiRessource2.Models
             public DateTime DatePost { get; set; }
             public string Content { get; set; }
             public bool IsDeleted { get; set; }
-            public int RessourceId { get; set; }
+            public int ResourceId { get; set; }
             public int UserId { get; set; }
-            //public int CommentReplyId { get; set; }
+            public virtual Resource Resource { get; set; }
     }
 }

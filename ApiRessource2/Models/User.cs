@@ -1,4 +1,6 @@
-﻿namespace ApiRessource2.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ApiRessource2.Models
 {
     public enum Role { User, Moderator , Administrator, SuperAdministrator };
     public class User
@@ -15,7 +17,9 @@
         public bool IsDeleted { get; set; }
         public Role Role { get; set; }
         public int ZoneGeoId { get; set; }
-        public virtual ICollection<Resource> Resource { get; set; }
+
+        //[ForeignKey("UserId")]
+        //public virtual ICollection<Resource> Resource { get; set; }
 
     }
 }
