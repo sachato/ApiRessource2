@@ -27,11 +27,20 @@ namespace ApiRessource2
             builder.Services.AddScoped<IUserService, UserService>();
             
             ConfigurationHelper.Initialize(builder.Configuration);
-            builder.Services.AddDbContext<DataContext>(
-                options => {
-                    string mySqlConnectionStr = builder.Configuration.GetConnectionString("connectionString");
-                    options.UseMySql(mySqlConnectionStr, MariaDbServerVersion.AutoDetect(mySqlConnectionStr));
-            });
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddDbContext<DataContext>(
+               options => {
+                   options.UseInMemoryDatabase("RessourceDb");
+               });
+            } else
+            {
+                builder.Services.AddDbContext<DataContext>(
+               options => {
+                   string mySqlConnectionStr = builder.Configuration.GetConnectionString("connectionString");
+                   options.UseMySql(mySqlConnectionStr, MariaDbServerVersion.AutoDetect(mySqlConnectionStr));
+               });
+            }
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddSingleton<IUriService>(o =>
             {
@@ -46,6 +55,11 @@ namespace ApiRessource2
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+                using (var scope = app.Services.CreateScope())
+                {
+                    (scope.ServiceProvider.GetRequiredService(typeof(DataContext)) as DataContext).Database.EnsureDeleted();
+                    (scope.ServiceProvider.GetRequiredService(typeof(DataContext)) as DataContext).Database.EnsureCreated();
+                }
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
