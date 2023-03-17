@@ -29,7 +29,6 @@ namespace ApiRessource2.Controllers
         }
 
         [HttpGet("getallcommentsbyidressource/{ressourceId}")]
-        [Authorize]
         public async Task<ActionResult<IEnumerable<Comment>>> GetAllCommentsByIdRessource(int ressourceId)
         {
             var ressourceComments = await _context.Comments
