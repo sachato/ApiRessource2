@@ -30,7 +30,7 @@ namespace ApiRessource2.Controllers
 
         // GET: api/Resources
         [HttpGet]
-        public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter, TriType triType)
+        public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter, TriType triType, [System.Web.Http.FromUri] string? search = "")
         {
             var resource = new List<Resource>();
             try
@@ -42,6 +42,11 @@ namespace ApiRessource2.Controllers
                    .Take(validFilter.PageSize)
                    .Include(r => r.User)
                    .AsQueryable();
+
+                if(search != "" && search != null)
+                {
+                    query = query.Where(r=>r.Title.ToLower().Contains(search.ToLower()) || r.Description.ToLower().Contains(search.ToLower())).AsQueryable();
+                }
 
                 if(triType == TriType.Alphabetique)
                 {
@@ -100,31 +105,6 @@ namespace ApiRessource2.Controllers
         }
 
 
-        // GET: api/Resources/search/
-        [HttpGet("search")]
-        public async Task<IActionResult> GetFiltredResource(string search, [FromQuery] PaginationFilter filter)
-        {
-            var route = Request.Path.Value;
-            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
-            var query = _context.Resources
-                .Where(r => r.IsDeleted == false)
-                .Where(r => r.Title.ToLower().Contains(search.ToLower()))
-                .AsQueryable();
-
-            var resource = await query.Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
-                .Take(validFilter.PageSize)
-                .Include(r => r.User)
-                .ToListAsync();
-
-            if (resource == null)
-            {
-                return NotFound();
-            }
-
-            var totalRecords = await _context.Resources.CountAsync();
-            var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
-            return Ok(pagedReponse);
-        }
 
 
         // PUT: api/Resources/5
