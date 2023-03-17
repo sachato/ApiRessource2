@@ -110,10 +110,10 @@ namespace ApiRessource2.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<Comment>> PostComment(Comment comment)
+        public async Task<ActionResult<Comment>> PostComment(PostComment comment)
         {
             var ressourceExists = await _context.Resources.AnyAsync(r => r.Id == comment.ResourceId);
-            if (ressourceExists)
+            if (!ressourceExists)
                 return BadRequest("La ressource n'existe pas dans la base de données.");
 
 
@@ -121,11 +121,15 @@ namespace ApiRessource2.Controllers
                 return BadRequest("Le contenu du commentaire est obligatoire.");
 
             User user = (User)HttpContext.Items["User"];
-            var userId = user.Id;
+            Comment newComment = new Comment();
 
-            comment.DatePost = DateTime.Now;
-            comment.UserId = userId;
-            _context.Comments.Add(comment);
+            newComment.DatePost = DateTime.Now;
+            newComment.UserId = user.Id;
+            newComment.Content = comment.Content;
+            newComment.IsDeleted = false;
+            newComment.ResourceId = comment.ResourceId;
+
+            _context.Comments.Add(newComment);
             await _context.SaveChangesAsync();
 
             return Ok(comment);

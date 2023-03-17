@@ -35,14 +35,14 @@ namespace ApiRessource2
         }
 
 
-        //Configurations des tables
+        /*//Configurations des tables
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             //Resource//
-            /*builder.Entity<Resource>(entity =>
+            *//*builder.Entity<Resource>(entity =>
             {
                 entity.ToTable("Resources");
                 entity.HasKey(r => r.Id);
@@ -63,8 +63,8 @@ namespace ApiRessource2
                 entity.Property(c => c.Content).IsRequired();
                 entity.Property(c => c.UserId).HasColumnName("UserId").IsRequired();
                 entity.Property(c => c.ResourceId).HasColumnName("ResourceId").IsRequired();
-            });*/
-        }
+            });*//*
+        }*/
 
 
 
