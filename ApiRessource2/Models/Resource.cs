@@ -16,10 +16,15 @@ namespace ApiRessource2.Models
         public int DownVote { get; set; }
         public TypeRessource Type { get; set; }
         public int UserId { get; set; }
-        public virtual User User { get; set; }
+        public virtual UserReturn User { get; set; }
 
         [ForeignKey("ResourceId")]
         public virtual ICollection<Comment> Comments { get; set; }
-        
+
+        //[ForeignKey("ResourceId")]
+        public virtual Voted Voted { get; set; }
+
+        public virtual Favoris Favoris { get; set; }
+
     }
 }

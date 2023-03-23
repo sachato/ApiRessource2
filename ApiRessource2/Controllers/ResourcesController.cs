@@ -28,6 +28,9 @@ namespace ApiRessource2.Controllers
             this.uriService = uriService;
         }
 
+        //TODO route upvote et downvote 
+
+
         // GET: api/Resources
         [HttpGet]
         public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter, TriType triType, [System.Web.Http.FromUri] string? search = "")
@@ -84,13 +87,51 @@ namespace ApiRessource2.Controllers
         {
             try
             {
-                var resource = await _context.Resources.Where(r=>r.Id == id).Include(r=>r.Comments).ThenInclude(c=>c.User).Include(r=>r.User).FirstOrDefaultAsync();
+                var resource = await _context.Resources.Where(r=>r.Id == id)
+                    .Include(r=>r.Comments).ThenInclude(c=>c.User)
+                    //.Include(r=>r.User)
+                    //.Include(r=>r.Voted)
+                    .FirstOrDefaultAsync();
                 if (resource == null)
                 {
                     string[] errorList = new string[] { $"La ressource {id} n'a pas été trouvée ou n'existe pas." };
                     Response<Resource> responseNotFound = new(null, $"La ressource {id} n'a pas été trouvée ou n'existe pas.");
                     return NotFound(responseNotFound);
                 }
+
+                User userFromRessource = await _context.Users.FirstAsync(r => r.Id == resource.UserId);
+                UserReturn usertoreturn = new UserReturn()
+                {
+                    Id = userFromRessource.Id,
+                    Username = userFromRessource.Username,
+                    Role = userFromRessource.Role
+                };
+
+                resource.User = usertoreturn;
+
+                User user = (User)HttpContext.Items["User"];
+                if (user != null)
+                {
+                    Voted voted = await _context.Voteds
+                                        .Where(v => v.ResourceId == resource.Id)
+                                        .Where(v => v.UserId == user.Id)
+                                        .FirstOrDefaultAsync();
+
+                    if (voted != null)
+                    {
+                        resource.Voted = voted;
+                    }
+
+                    Favoris favoris = await _context.Favoris
+                                        .Where(v => v.ResourceId == resource.Id)
+                                        .Where(v => v.UserId == user.Id)
+                                        .FirstOrDefaultAsync();
+                    if (favoris != null)
+                    {
+                        resource.Favoris = favoris;
+                    }
+                }
+                
 
                 Response<Resource> response = new(resource, $"La ressource {id} a été trouvée.");
                 return Ok(response);
@@ -201,23 +242,23 @@ namespace ApiRessource2.Controllers
         }
 
 
-        // PUT: api/Resources/upvote/5
+        // PUT: api/Resources/5/upvote
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize]
-        [HttpPut("upvote")]
-        public async Task<IActionResult> upvote(int idresource)
+        [HttpPut("{id}/upvote")]
+        public async Task<IActionResult> upvote(int id)
         {
             User user = (User)HttpContext.Items["User"];
-            if (idresource == null || idresource == 0 || user.Id == null || user.Id == 0)
+            if (id == null || id == 0 || user.Id == null || user.Id == 0)
             {
                 return BadRequest("La ressource est introuvable.");
             }
 
 
-            var voted = await _context.Voteds.Where(v => v.UserId == user.Id).Where(v => v.RessourceId == idresource).FirstOrDefaultAsync();
+            var voted = await _context.Voteds.Where(v => v.UserId == user.Id).Where(v => v.ResourceId == id).FirstOrDefaultAsync();
             if (voted == null)
             {
-                var resourceToUpdate = await _context.Resources.FindAsync(idresource);
+                var resourceToUpdate = await _context.Resources.FindAsync(id);
 
                 if (resourceToUpdate == null)
                 {
@@ -227,8 +268,9 @@ namespace ApiRessource2.Controllers
                 resourceToUpdate.UpVote++;
                 voted = new Voted
                 {
-                    RessourceId = idresource,
-                    UserId = user.Id
+                    ResourceId = id,
+                    UserId = user.Id,
+                    Type = "upvote"
                 };
                 _context.Voteds.Add(voted);
                 _context.Update(resourceToUpdate);
@@ -256,23 +298,23 @@ namespace ApiRessource2.Controllers
 
 
 
-        // PUT: api/Resources/upvote/5
+        // PUT: api/Resources/5/upvote/
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize]
-        [HttpPut("downvote")]
-        public async Task<IActionResult> downvote(int idresource)
+        [HttpPut("{id}/downvote")]
+        public async Task<IActionResult> downvote(int id)
         {
             User user = (User)HttpContext.Items["User"];
-            if (idresource == null || idresource == 0 || user.Id == null || user.Id == 0)
+            if (id == null || id == 0 || user.Id == null || user.Id == 0)
             {
                 return BadRequest("La ressource est introuvable.");
             }
             
             
-            var voted = await _context.Voteds.Where(v => v.UserId == user.Id).Where(v => v.RessourceId == idresource).FirstOrDefaultAsync();
+            var voted = await _context.Voteds.Where(v => v.UserId == user.Id).Where(v => v.ResourceId == id).FirstOrDefaultAsync();
             if (voted == null)
             {
-                var resourceToUpdate = await _context.Resources.FindAsync(idresource);
+                var resourceToUpdate = await _context.Resources.FindAsync(id);
 
                 if (resourceToUpdate == null)
                 {
@@ -282,8 +324,9 @@ namespace ApiRessource2.Controllers
                 resourceToUpdate.DownVote++;
                 voted = new Voted
                 {
-                    RessourceId = idresource,
-                    UserId = user.Id
+                    ResourceId = id,
+                    UserId = user.Id,
+                    Type = "downvote"
                 };
                 _context.Voteds.Add(voted);
                 _context.Update(resourceToUpdate);

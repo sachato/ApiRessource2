@@ -50,14 +50,17 @@ namespace ApiRessource2.Controllers
             return Ok(favoris);
         }
 
-        [HttpPost("{ressourceid}")]
+        [HttpPost("{id}")]
         [Authorize]
-        public async Task<ActionResult<Favoris>> PostFavoris(Favoris favoris, int RessourceId)
+        public async Task<ActionResult<Favoris>> PostFavoris(int id)
         {
             User user = (User)HttpContext.Items["User"];
             var userId = user.Id;
-            favoris.UserId = userId;
-            favoris.RessourceId = RessourceId;
+            var favoris = new Favoris()
+            {
+                ResourceId = id,
+                UserId = userId
+            };
             _context.Favoris.Add(favoris);
             await _context.SaveChangesAsync();
             return Ok(favoris);
