@@ -11,8 +11,11 @@ namespace ApiRessource2.Models
         public bool IsDeleted { get; set; }
         public int ResourceId { get; set; }
         public int UserId { get; set; }
-        public virtual Resource Resource { get; set; }
-        public virtual User User { get; set; }
+
+        //rendre nulle User et Resource
+        public virtual User? User { get; set; }
+        public virtual Resource? Resource { get; set; }
+        
 
     }
 }

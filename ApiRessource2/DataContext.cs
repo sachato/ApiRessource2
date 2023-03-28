@@ -27,10 +27,24 @@ namespace ApiRessource2
         {
             if (hostEnvironment.IsDevelopment())
             {
-                modelBuilder.Entity<User>().HasData(new User { Id = 1, LastName = "Moreau", FirstName = "Kévin", IsConfirmed = true, IsDeleted = false, Role = Role.Administrator, CreationDate = DateTime.Now, Email = "kevin.moreau2@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("test"), PhoneNumber = "+33672920837", Username = "Keke", ZoneGeoId = 1 });
+                modelBuilder.Entity<User>().HasData(new User { Id = 1, LastName = "Moreau", FirstName = "Kévin", IsConfirmed = true, IsDeleted = false, Role = Role.User, CreationDate = DateTime.Now, Email = "kevin.moreau2@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("Test123456789!"), PhoneNumber = "+33672920837", Username = "Keke", ZoneGeoId = 1 });
                 modelBuilder.Entity<User>().HasData(new User { Id = 2, LastName = "Tortelli", FirstName = "Sacha", IsConfirmed = true, IsDeleted = false, Role = Role.User, CreationDate = DateTime.Now, Email = "sacha.tortelli@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("test"), PhoneNumber = "+33672920835", Username = "Sachou", ZoneGeoId = 1 });
+                
+                modelBuilder.Entity<User>().HasData(new User { Id = 3, LastName = "User", FirstName = "User", IsConfirmed = true, IsDeleted = false, Role = Role.User, CreationDate = DateTime.Now, Email = "User@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("Test123456789!"), PhoneNumber = "+33672920835", Username = "User", ZoneGeoId = 1 });
+                modelBuilder.Entity<User>().HasData(new User { Id = 4, LastName = "NotOwner", FirstName = "NotOwner", IsConfirmed = true, IsDeleted = false, Role = Role.User, CreationDate = DateTime.Now, Email = "NotOwner@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("Test123456789!"), PhoneNumber = "+33672920835", Username = "NotOwner", ZoneGeoId = 1 });
+                modelBuilder.Entity<User>().HasData(new User { Id = 5, LastName = "Admin", FirstName = "Admin", IsConfirmed = true, IsDeleted = false, Role = Role.Administrator, CreationDate = DateTime.Now, Email = "Admin@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("Test123456789!"), PhoneNumber = "+33672920835", Username = "Admin", ZoneGeoId = 1 });
+                modelBuilder.Entity<User>().HasData(new User { Id = 6, LastName = "Moderateur", FirstName = "Moderateur", IsConfirmed = true, IsDeleted = false, Role = Role.Moderator, CreationDate = DateTime.Now, Email = "Moderateur@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("Test123456789!"), PhoneNumber = "+33672920835", Username = "Moderateur", ZoneGeoId = 1 });
+                modelBuilder.Entity<User>().HasData(new User { Id = 7, LastName = "SuperAdmin", FirstName = "SuperAdmin", IsConfirmed = true, IsDeleted = false, Role = Role.SuperAdministrator, CreationDate = DateTime.Now, Email = "SuperAdmin@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("Test123456789!"), PhoneNumber = "+33672920835", Username = "SuperAdmin", ZoneGeoId = 1 });
+
                 modelBuilder.Entity<Resource>().HasData(new Resource { Id = 1, CreationDate = DateTime.Now, Description = "Description1", DownVote = 0, UpVote = 0, IsDeleted = false, Path = "", Title = "Ressource1", Type = TypeRessource.Texte, UserId = 1 });
                 modelBuilder.Entity<Resource>().HasData(new Resource { Id = 2, CreationDate = DateTime.Now, Description = "Description2", DownVote = 0, UpVote = 0, IsDeleted = false, Path = "", Title = "Ressource2", Type = TypeRessource.Document, UserId = 1 });
+
+                modelBuilder.Entity<Comment>().HasData(new Comment { Id = 1, DatePost = DateTime.Now, Content = "Description1", IsDeleted = false, ResourceId = 1, UserId = 3 });
+                modelBuilder.Entity<Comment>().HasData(new Comment { Id = 2, DatePost = DateTime.Now, Content = "Description2", IsDeleted = false, ResourceId = 1, UserId = 3 });
+                modelBuilder.Entity<Comment>().HasData(new Comment { Id = 3, DatePost = DateTime.Now, Content = "Description3", IsDeleted = false, ResourceId = 1, UserId = 1 }); //NotOwner
+                modelBuilder.Entity<Comment>().HasData(new Comment { Id = 4, DatePost = DateTime.Now, Content = "Description2", IsDeleted = false, ResourceId = 2, UserId = 1 });
+
+
             }
         }
 

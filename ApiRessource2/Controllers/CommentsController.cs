@@ -99,7 +99,6 @@ namespace ApiRessource2.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-
                 return NotFound();
 
             }
@@ -168,7 +167,7 @@ namespace ApiRessource2.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Role.Moderator)]
+        [Authorize]
         public async Task<IActionResult> DeleteComment(int id)
         {
             var comment = await _context.Comments.FindAsync(id);
