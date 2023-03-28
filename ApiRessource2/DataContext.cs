@@ -27,8 +27,8 @@ namespace ApiRessource2
         {
             if (hostEnvironment.IsDevelopment())
             {
-                modelBuilder.Entity<User>().HasData(new User { Id = 1, LastName = "Moreau", FirstName = "Kévin", IsConfirmed = true, IsDeleted = false, Role = Role.Administrator, CreationDate = DateTime.Now, Email = "kevin.moreau2@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("test"), PhoneNumber = "+33672920837", Username = "Keke", ZoneGeoId = 1 });
-                modelBuilder.Entity<User>().HasData(new User { Id = 2, LastName = "Tortelli", FirstName = "Sacha", IsConfirmed = true, IsDeleted = false, Role = Role.User, CreationDate = DateTime.Now, Email = "sacha.tortelli@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("test"), PhoneNumber = "+33672920835", Username = "Sachou", ZoneGeoId = 1 });
+                modelBuilder.Entity<User>().HasData(new User { Id = 1, LastName = "Moreau", FirstName = "Kévin", IsConfirmed = true, IsDeleted = false, Role = Role.Administrator, CreationDate = DateTime.Now, Email = "Admin@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("Test123456789!"), PhoneNumber = "+33672920837", Username = "Keke", ZoneGeoId = 1 });
+                modelBuilder.Entity<User>().HasData(new User { Id = 2, LastName = "Tortelli", FirstName = "Sacha", IsConfirmed = true, IsDeleted = false, Role = Role.User, CreationDate = DateTime.Now, Email = "kevin.moreau2@viacesi.fr", Password = BCrypt.Net.BCrypt.HashPassword("Test123456789!"), PhoneNumber = "+33672920835", Username = "Sachou", ZoneGeoId = 1 });
                 modelBuilder.Entity<Resource>().HasData(new Resource { Id = 1, CreationDate = DateTime.Now, Description = "Description1", DownVote = 0, UpVote = 0, IsDeleted = false, Path = "", Title = "Ressource1", Type = TypeRessource.Texte, UserId = 1 });
                 modelBuilder.Entity<Resource>().HasData(new Resource { Id = 2, CreationDate = DateTime.Now, Description = "Description2", DownVote = 0, UpVote = 0, IsDeleted = false, Path = "", Title = "Ressource2", Type = TypeRessource.Document, UserId = 1 });
             }

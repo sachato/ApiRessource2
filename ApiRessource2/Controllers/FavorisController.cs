@@ -58,13 +58,24 @@ namespace ApiRessource2.Controllers
         {
             User user = (User)HttpContext.Items["User"];
             var userId = user.Id;
-            var favoris = new Favoris()
+            Favoris favoris = new Favoris();
+            try
             {
-                ResourceId = id,
-                UserId = userId
-            };
-            _context.Favoris.Add(favoris);
-            await _context.SaveChangesAsync();
+                favoris = _context.Favoris.Where(f=>f.UserId == userId && f.ResourceId == id).FirstOrDefault();
+                _context.Remove(favoris);
+                _context.SaveChanges();
+            }
+            catch
+            {
+                favoris = new Favoris()
+                {
+                    ResourceId = id,
+                    UserId = userId
+                };
+                _context.Favoris.Add(favoris);
+                await _context.SaveChangesAsync();
+            }
+            
             return Ok(favoris);
         }
 
