@@ -58,14 +58,29 @@ namespace ApiRessource2.Controllers
         {
             User user = (User)HttpContext.Items["User"];
             var userId = user.Id;
-            var favoris = new Favoris()
-            {
-                ResourceId = id,
-                UserId = userId
-            };
-            _context.Favoris.Add(favoris);
-            await _context.SaveChangesAsync();
-            return Ok(favoris);
+
+            //verifier si l'utilisateur a déjà ajouté cette ressource à ses favoris
+            if (_context.Favoris.Where(f => f.UserId == userId && f.ResourceId == id).FirstOrDefault() != null)
+                BadRequest("Vous avez déjà ajouté cette ressource à vos favoris.");
+
+            Resource resource = new Resource();
+            Favoris favoris = new Favoris();
+            if (_context.Resources.Any(r => r.Id == id))
+                {
+                    favoris = new Favoris()
+                    {
+                        ResourceId = id,
+                        UserId = userId
+                    };
+                    _context.Favoris.Add(favoris);
+                    await _context.SaveChangesAsync();
+                    return Ok(favoris);
+
+                }           
+            
+
+            return NotFound("La ressource n'a pas été trouvée.");
+
         }
 
 

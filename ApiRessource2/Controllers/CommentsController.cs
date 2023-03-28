@@ -62,48 +62,38 @@ namespace ApiRessource2.Controllers
 
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> PutComment(int id, Comment comment)
+        public async Task<IActionResult> PutComment(int id, PostComment comment)
         {
             User user = (User)HttpContext.Items["User"];
-            var userId = user.Id;
+            
 
-            if (userId == 0)
+            if (user == null)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
-            var authorizationResult = await VerifyAuthorization(comment);
-            if (authorizationResult != null)
-                return authorizationResult;
 
-            // Vérifier que l'id de l'entité à mettre à jour correspond à celui fourni dans l'URL
-            if (id != comment.Id)
-            {
-                return BadRequest("L'ID fourni dans l'URL ne correspond pas à l'ID de l'entité.");
-            }
-
-            // Récupérer le commentaire correspondant à l'id dans la base de données
             var commentToUpdate = await _context.Comments.FindAsync(id);
-
             if (commentToUpdate == null)
             {
                 return NotFound("Le commentaire n'a pas été trouvé.");
             }
-
-            // Mettre à jour les propriétés du commentaire récupéré avec les nouvelles valeurs
-            commentToUpdate.Content = comment.Content;
-
-            _context.Entry(commentToUpdate).State = EntityState.Modified;
-
-            try
+            if (user.Role== Role.Moderator || user.Role== Role.Administrator || user.Role == Role.SuperAdministrator || user.Id == commentToUpdate.UserId)
             {
-                await _context.SaveChangesAsync();
+                commentToUpdate.Content = comment.Content;
+                _context.Update(commentToUpdate);
+                _context.SaveChanges();
             }
-            catch (DbUpdateConcurrencyException)
+            else
             {
-                return NotFound();
-
+                return Unauthorized();
             }
 
             return Ok(commentToUpdate);
+
+            //_context.Entry(commentToUpdate).State = EntityState.Modified;
+
+                return NotFound();
+
+
         }
 
         [HttpPost]
