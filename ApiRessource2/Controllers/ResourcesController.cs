@@ -45,6 +45,7 @@ namespace ApiRessource2.Controllers
                    .Take(validFilter.PageSize)
                    .Include(r => r.User)
                    .AsQueryable();
+                
 
                 if(search != "" && search != null)
                 {
@@ -67,9 +68,12 @@ namespace ApiRessource2.Controllers
                 {
                     resource = await query.OrderByDescending(q => q.CreationDate).ThenBy(q => q.CreationDate.TimeOfDay).ToListAsync();
                 }
-
-
-                var totalRecords = await _context.Resources.CountAsync();
+                foreach (var item in resource)
+                {
+                    item.User = new User() { Id = item.User.Id, Role = item.User.Role, Username = item.User.Username };
+                }
+                
+                var totalRecords = resource.Count();
                 var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
                 return Ok(pagedReponse);
             }
@@ -89,7 +93,7 @@ namespace ApiRessource2.Controllers
             {
                 var resource = await _context.Resources.Where(r=>r.Id == id)
                     .Include(r=>r.Comments).ThenInclude(c=>c.User)
-                    //.Include(r=>r.User)
+                    .Include(r=>r.User)
                     //.Include(r=>r.Voted)
                     .FirstOrDefaultAsync();
                 if (resource == null)
@@ -99,16 +103,14 @@ namespace ApiRessource2.Controllers
                     return NotFound(responseNotFound);
                 }
 
-                User userFromRessource = await _context.Users.FirstAsync(r => r.Id == resource.UserId);
-                UserReturn usertoreturn = new UserReturn()
+                User usertoreturn = new User()
                 {
-                    Id = userFromRessource.Id,
-                    Username = userFromRessource.Username,
-                    Role = userFromRessource.Role
+                    Id = resource.User.Id,
+                    Username = resource.User.Username,
+                    Role = resource.User.Role
                 };
 
                 resource.User = usertoreturn;
-
                 User user = (User)HttpContext.Items["User"];
                 if (user != null)
                 {

@@ -40,8 +40,10 @@ namespace ApiRessource2.Controllers
         }
         [HttpGet("getallfavorisbyiduser")]
         [Authorize]
-        public async Task<ActionResult<Favoris>> GetAllFavorisByIdUser(int userId)
+        public async Task<ActionResult<Favoris>> GetAllFavorisByIdUser()
         {
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
             var favoris = await _context.Favoris.FirstOrDefaultAsync(f => f.UserId == userId);
 
         if (favoris == null)
