@@ -21,7 +21,7 @@ namespace ApiRessource2.Models
         public int ZoneGeoId { get; set; }
 
         //[ForeignKey("UserId")]
-        //public virtual ICollection<Resource> Resource { get; set; }
+        //public virtual ICollection<Resource> Resource { get; set; } 
 
     }
 }

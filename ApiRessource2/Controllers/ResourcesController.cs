@@ -41,8 +41,6 @@ namespace ApiRessource2.Controllers
                 var route = Request.Path.Value;
                 var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
                 var query = _context.Resources
-                   .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
-                   .Take(validFilter.PageSize)
                    .Include(r => r.User)
                    .AsQueryable();
                 
@@ -68,12 +66,20 @@ namespace ApiRessource2.Controllers
                 {
                     resource = await query.OrderByDescending(q => q.CreationDate).ThenBy(q => q.CreationDate.TimeOfDay).ToListAsync();
                 }
+                var totalRecords = resource.Count();
+
+                resource = resource
+                   .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                   .Take(validFilter.PageSize)
+                   .ToList();
                 foreach (var item in resource)
                 {
                     item.User = new User() { Id = item.User.Id, Role = item.User.Role, Username = item.User.Username };
                 }
+
                 
-                var totalRecords = resource.Count();
+                
+                
                 var pagedReponse = PaginationHelper.CreatePagedReponse<Resource>(resource, validFilter, totalRecords, uriService, route);
                 return Ok(pagedReponse);
             }
@@ -290,7 +296,18 @@ namespace ApiRessource2.Controllers
             }
             else
             {
-                return BadRequest("Vous avez deja donner votre avis sur cette ressource.");
+                if(voted.Type == "downvote")
+                {
+                    voted.Type = "upvote";
+                    _context.Update(voted);
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    _context.Remove(voted);
+                    _context.SaveChanges();
+                }
+                //return BadRequest("Vous avez deja donner votre avis sur cette ressource.");
             }
 
 
@@ -346,7 +363,18 @@ namespace ApiRessource2.Controllers
             }
             else
             {
-                return BadRequest("Vous avez deja donner votre avis sur cette ressource.");
+                if (voted.Type == "upvote")
+                {
+                    voted.Type = "downvote";
+                    _context.Update(voted);
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    _context.Remove(voted);
+                    _context.SaveChanges();
+                }
+                //return BadRequest("Vous avez deja donner votre avis sur cette ressource.");
             }
 
 
