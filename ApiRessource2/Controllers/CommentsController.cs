@@ -36,9 +36,7 @@ namespace ApiRessource2.Controllers
                 .ToListAsync();
 
             if (ressourceComments.Count == 0)
-            {
                 return NotFound("Les ressources n'ont pas été trouvées");
-            }
 
             return ressourceComments;
         }
@@ -70,12 +68,16 @@ namespace ApiRessource2.Controllers
             if (user == null)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
-
+            
             var commentToUpdate = await _context.Comments.FindAsync(id);
             if (commentToUpdate == null)
-            {
+                return BadRequest("Le commentaire n'existe pas");
+            if (commentToUpdate.IsDeleted == true)
+                return BadRequest("Le commentaire à été supprimer.");
+
+            if (commentToUpdate == null )
                 return NotFound("Le commentaire n'a pas été trouvé.");
-            }
+
             if (user.Role== Role.Moderator || user.Role== Role.Administrator || user.Role == Role.SuperAdministrator || user.Id == commentToUpdate.UserId)
             {
                 commentToUpdate.Content = comment.Content;
@@ -92,8 +94,6 @@ namespace ApiRessource2.Controllers
             //_context.Entry(commentToUpdate).State = EntityState.Modified;
 
                 return NotFound();
-
-
         }
 
         [HttpPost]
@@ -170,7 +170,7 @@ namespace ApiRessource2.Controllers
             if (userId == 0)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
-            var authorizationResult = await VerifyAuthorization(comment);
+            var authorizationResult = VerifyAuthorization(comment);
             if (authorizationResult != null)
                 return authorizationResult;
 
@@ -180,15 +180,15 @@ namespace ApiRessource2.Controllers
             return NoContent();
         }
 
-        private async Task<IActionResult> VerifyAuthorization(Comment comment)
+        private IActionResult VerifyAuthorization(Comment comment)
         {
             User user = (User)HttpContext.Items["User"];
             var userId = user.Id;
             var isModerator = user != null && (user.Role == Role.Administrator || user.Role == Role.Moderator || user.Role == Role.SuperAdministrator);
             var isOwner = comment.UserId == userId;
-            var isDeleted = !comment.IsDeleted;
+            var isDeleted = comment.IsDeleted;
 
-            if (!isDeleted)
+            if (isDeleted)
                 return NotFound("Le commentaire que vous essayez de mettre à jour a été supprimé");
 
             if (!isModerator && !isOwner)

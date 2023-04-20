@@ -47,7 +47,7 @@ namespace ApiRessource2.Controllers
             var favoris = await _context.Favoris.FirstOrDefaultAsync(f => f.UserId == userId);
 
         if (favoris == null)
-                return Ok(favoris);
+                return NotFound("Vous n'avez aucune ressources en favoris");
 
             return Ok(favoris);
         }
@@ -59,55 +59,52 @@ namespace ApiRessource2.Controllers
             User user = (User)HttpContext.Items["User"];
             var userId = user.Id;
 
-            //verifier si l'utilisateur a déjà ajouté cette ressource à ses favoris
+            // Vérifier si l'utilisateur a déjà ajouté cette ressource à ses favoris
             if (_context.Favoris.Where(f => f.UserId == userId && f.ResourceId == id).FirstOrDefault() != null)
-                BadRequest("Vous avez déjà ajouté cette ressource à vos favoris.");
+                return BadRequest("Vous avez déjà ajouté cette ressource à vos favoris.");
 
-            Resource resource = new Resource();
+            var ressourceExists = await _context.Resources.AnyAsync(r => r.Id == id);
+            if (!ressourceExists)
+                return BadRequest("La ressource n'existe pas dans la base de données.");
+
             Favoris favoris = new Favoris();
             if (_context.Resources.Any(r => r.Id == id))
+            {
+                favoris = new Favoris()
                 {
-                    favoris = new Favoris()
-                    {
-                        ResourceId = id,
-                        UserId = userId
-                    };
-                    _context.Favoris.Add(favoris);
-                    await _context.SaveChangesAsync();
-                    return Ok(favoris);
+                    ResourceId = id,
+                    UserId = userId
+                };
 
-                }           
-            
-
-            return NotFound("La ressource n'a pas été trouvée.");
-
+                _context.Favoris.Add(favoris);
+                await _context.SaveChangesAsync();
+                return Ok(favoris);
+            }
+            else
+            {
+                return NotFound("La ressource n'a pas été trouvée.");
+            }
         }
 
-
         // DELETE: api/Favoris/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{resourceId}")]
         [Authorize]
-        public async Task<IActionResult> DeleteFavoris(int id)
+        public async Task<IActionResult> DeleteFavoris(int resourceId)
         {
             User user = (User)HttpContext.Items["User"];
             var userId = user.Id;
 
-            var favoris = await _context.Favoris.FindAsync(id); ;
+            var favoris = await _context.Favoris.FirstOrDefaultAsync(f => f.UserId == userId && f.ResourceId == resourceId);
 
             if (userId == null)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
             if (favoris == null)
-                return NotFound("Le favoris que vous essayez de mettre à jour a été supprimé");
+                return NotFound("Le favori que vous essayez de mettre à jour a été supprimé");
 
             var authorizationResult = await VerifyAuthorization(favoris);
             if (authorizationResult != null)
                 return authorizationResult;
-
-            var isOwner = _context.Favoris.Any(c => c.Id == favoris.Id && c.UserId == userId);
-
-            if (!isOwner)
-                return Unauthorized("Vous n'êtes pas autorisé à supprimer ce favoris.");
 
             _context.Favoris.Remove(favoris);
             await _context.SaveChangesAsync();

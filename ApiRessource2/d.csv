@@ -1,5 +1,0 @@
-Claim;Claim._issuer;Claim._originalIssuer;Claim._subject;Claim._type;Claim._value;Claim._valueType;Claim.Issuer;Claim.OriginalIssuer;Claim.Subject;Claim.Type;Claim.Value;Claim.ValueType
-"id: 2";"LOCAL AUTHORITY";"LOCAL AUTHORITY";"";id;2;http://www.w3.org/2001/XMLSchema#string;"LOCAL AUTHORITY";"LOCAL AUTHORITY";"";id;2;http://www.w3.org/2001/XMLSchema#string
-"nbf: 1676732108";"LOCAL AUTHORITY";"LOCAL AUTHORITY";"";nbf;1676732108;http://www.w3.org/2001/XMLSchema#integer;"LOCAL AUTHORITY";"LOCAL AUTHORITY";"";nbf;1676732108;http://www.w3.org/2001/XMLSchema#integer
-"exp: 1677336908";"LOCAL AUTHORITY";"LOCAL AUTHORITY";"";exp;1677336908;http://www.w3.org/2001/XMLSchema#integer;"LOCAL AUTHORITY";"LOCAL AUTHORITY";"";exp;1677336908;http://www.w3.org/2001/XMLSchema#integer
-"iat: 1676732108";"LOCAL AUTHORITY";"LOCAL AUTHORITY";"";iat;1676732108;http://www.w3.org/2001/XMLSchema#integer;"LOCAL AUTHORITY";"LOCAL AUTHORITY";"";iat;1676732108;http://www.w3.org/2001/XMLSchema#integer

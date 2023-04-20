@@ -21,7 +21,7 @@ namespace ApiRessource2.Controllers
         // GET: api/Consultations
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Consultation>>> getAllconsultationsbyid(int id)
+        public ActionResult<IEnumerable<Consultation>> getAllconsultationsbyid(int id)
         {
             return _context.Consultations.Where(c => c.Id == id).ToList();
 
@@ -46,69 +46,71 @@ namespace ApiRessource2.Controllers
             ;
         }
 
-        // PUT: api/Consultations/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        [Authorize]
-        public async Task<IActionResult> PutConsultation(int id)
-        {
-            User user = (User)HttpContext.Items["User"];
-            var userId = user.Id;
-            if (userId == null)
-                return NotFound("L'utilisateur n'a pas été trouvé.");
-
-            Consultation consultation = _context.Consultations.Where(c => c.Id == id && c.UserId == userId).FirstOrDefault();
-            if (consultation == null)
-                return NotFound("La consultation que vous essayez de mettre à jour n'a pas été trouvée.");
-
-            var authorizationResult = await VerifyAuthorization(consultation);
-            if (authorizationResult != null)
-                return authorizationResult;
-
-            consultation.Date = DateTime.Now;
-            consultation.UserId = userId;
-
-
-            _context.Entry(consultation).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
-            return Ok(consultation);
-        }
-
         // POST: api/Consultations
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("{id}")]
         [Authorize]
-        public async Task<ActionResult<Consultation>> PostConsultation(Consultation consultation, int RessourceId)
+        public async Task<ActionResult<Consultation>> PostConsultation(int id)
         {
             User user = (User)HttpContext.Items["User"];
             var userId = user.Id;
-            if (userId == null)
+            if (user == null)
                 return NotFound("L'utilisateur n'a pas été trouvé.");
 
-            consultation.RessourceId = RessourceId;
-            consultation.Date = DateTime.Now;
-            consultation.UserId = userId;
-            _context.Consultations.Add(consultation);
-            await _context.SaveChangesAsync();
+            // Vérifier si la ressource existe dans le datacontext:
+            bool ressourceTrouvee = _context.Resources.Any(r => r.Id == id);
 
-            return Ok(consultation);
+            if (ressourceTrouvee)
+            {
+                bool trouve = _context.Consultations.Any(c => c.RessourceId == id && c.UserId == userId);
+                Consultation consultation = new Consultation();
+
+                // Si la consultation n'existe pas déjà:
+                if (!trouve)
+                {
+                    consultation.Date = DateTime.Now;
+                    consultation.UserId = userId;
+                    consultation.RessourceId = id;
+                    _context.Consultations.Add(consultation);
+                    await _context.SaveChangesAsync();
+                    return Ok(consultation);
+                }
+                else
+                {
+                    return BadRequest("La consultation existe déjà.");
+                }
+            }
+            else
+            {
+                return BadRequest("La ressource associée à l'historique n'a pas été trouvée.");
+            }
         }
 
         // DELETE: api/Consultations/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{resourceId}")]
         [Authorize]
-        public async Task<IActionResult> DeleteConsultation(Consultation consultation)
+        public async Task<IActionResult> DeleteConsultation(int resourceId)
         {
-            var authorizationResult = await VerifyAuthorization(consultation);
-            if (authorizationResult != null)
-                return authorizationResult;
+            User user = (User)HttpContext.Items["User"];
+            var userId = user.Id;
+            if (user == null)
+                return NotFound("L'utilisateur n'a pas été trouvé.");
+
+            var consultation = await _context.Consultations.FirstOrDefaultAsync(c => c.RessourceId == resourceId);
+            if (consultation == null)
+                return NotFound("La consultation que vous essayez de Supprimer a deja été supprimé");
+
+            var isModerator = user != null && (user.Role == Role.Administrator || user.Role == Role.Moderator || user.Role == Role.SuperAdministrator);
+            var isOwner = _context.Consultations.Any(c => c.Id == consultation.Id && c.UserId == userId);
+            if (!isModerator && !isOwner)
+                return Unauthorized("Vous n'êtes pas autorisé à supprimer cette consultation.");
 
             _context.Consultations.Remove(consultation);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         private async Task<IActionResult> VerifyAuthorization(Consultation consultation)
         {

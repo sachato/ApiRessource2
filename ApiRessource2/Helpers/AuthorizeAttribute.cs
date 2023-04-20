@@ -6,7 +6,7 @@ using ApiRessource2.Models;
 
 public class AuthorizeAttribute : Attribute, IAuthorizationFilter
 {
-    private Role[] Roles { get; set; } = new Role[] { Role.User, Role.Moderator, Role.Administrator, Role.SuperAdministrator};
+    public Role[] Roles { get; set; } = new Role[] { Role.User, Role.Moderator, Role.Administrator, Role.SuperAdministrator};
     public AuthorizeAttribute(params Role[]? roles) 
     { 
         if (roles.Length != 0)
@@ -16,7 +16,7 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
     }
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        var user = (User)context.HttpContext.Items["User"];
+        var user = context.HttpContext.Items["User"] as User;
         // Si array.indexOf == -1 cela veut dire que le role de l'utilisateur n'est pas pas roles.
         if (user == null || Array.IndexOf(Roles, user.Role) == -1)
         {

@@ -310,8 +310,6 @@ namespace ApiRessource2.Controllers
                 //return BadRequest("Vous avez deja donner votre avis sur cette ressource.");
             }
 
-
-
             return NoContent();
         }
 

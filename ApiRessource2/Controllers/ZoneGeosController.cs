@@ -21,12 +21,15 @@ namespace ApiRessource2.Controllers
             _context = context;
         }
 
-        // GET: api/ZoneGeos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ZoneGeo>>> GetZoneGeos()
         {
-            return await _context.ZoneGeos.ToListAsync();
+            List<ZoneGeo> zonegeos = await _context.ZoneGeos.ToListAsync();
+            return Ok(zonegeos);
         }
+
+
+
 
         // GET: api/ZoneGeos/5
         [HttpGet("{id}")]
