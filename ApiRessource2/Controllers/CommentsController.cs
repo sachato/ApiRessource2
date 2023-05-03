@@ -119,15 +119,15 @@ namespace ApiRessource2.Controllers
             if (string.IsNullOrEmpty(comment.Content))
                 return BadRequest("Le contenu du commentaire est obligatoire.");
 
-            User user = (User)HttpContext.Items["User"];
             Comment newComment = new Comment();
+            User user = (User)HttpContext.Items["User"];
+
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
             newComment.DatePost = DateTime.Now;
             newComment.UserId = user.Id;
             newComment.Content = comment.Content;
             newComment.IsDeleted = false;
-            newComment.ResourceId = comment.ResourceId;
-
             _context.Comments.Add(newComment);
             await _context.SaveChangesAsync();
 

@@ -237,18 +237,16 @@ namespace ApiRessource2.Controllers
                 _context.Resources.Update(resource);
                 await _context.SaveChangesAsync();
 
-                return NoContent();
-            }
-            return NoContent();
-            
+            return Ok(resource);
         }
+
 
 
         // PUT: api/Resources/5/upvote
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize]
-        [HttpPut("{id}/upvote")]
-        public async Task<IActionResult> upvote(int id)
+        [HttpPut("upvote/{{id}}")]
+        public async Task<IActionResult> upvote(int idresource)
         {
             User user = (User)HttpContext.Items["User"];
             if (id == null || id == 0 || user.Id == null || user.Id == 0)
@@ -303,8 +301,8 @@ namespace ApiRessource2.Controllers
         // PUT: api/Resources/5/upvote/
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize]
-        [HttpPut("{id}/downvote")]
-        public async Task<IActionResult> downvote(int id)
+        [HttpPut("downvote/{{id}}")]
+        public async Task<IActionResult> downvote(int idresource)
         {
             User user = (User)HttpContext.Items["User"];
             if (id == null || id == 0 || user.Id == null || user.Id == 0)
