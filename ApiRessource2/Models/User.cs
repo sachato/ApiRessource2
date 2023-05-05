@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace ApiRessource2.Models
 {
@@ -11,6 +11,7 @@ namespace ApiRessource2.Models
         public string LastName { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
+
         [JsonIgnore]
         public string Password { get; set; }
         public string PhoneNumber { get; set; }

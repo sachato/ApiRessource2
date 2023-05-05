@@ -233,7 +233,7 @@ namespace ApiRessource2.Controllers
                 {
                     return NotFound();
                 }
-
+                resource.IsDeleted = 1;
                 _context.Resources.Update(resource);
                 await _context.SaveChangesAsync();
 
