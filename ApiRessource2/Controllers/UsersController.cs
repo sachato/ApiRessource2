@@ -25,7 +25,7 @@ namespace ApiRessource2.Controllers
             _userService = userService;
         }
 
-        
+
         [HttpPost("authenticate")]
         public IActionResult Authenticate(AuthenticateRequest model)
         {
@@ -137,6 +137,57 @@ namespace ApiRessource2.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [Authorize]
+        [HttpPut("moderateur/{id}")]
+        public async Task<IActionResult> MakeUserModerator(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            User usertomakemoderator = _context.Users.Where(u=>u.Id == id).FirstOrDefault();
+            usertomakemoderator.Role = Role.Moderator;
+            _context.Update(usertomakemoderator);
+            await _context.SaveChangesAsync();
+
+            return Ok(usertomakemoderator);
+        }
+
+        [Authorize]
+        [HttpPut("admin/{id}")]
+        public async Task<IActionResult> MakeUserAdmin(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            User usertomakeadmin = _context.Users.Where(u => u.Id == id).FirstOrDefault();
+            usertomakeadmin.Role = Role.Administrator;
+            _context.Update(usertomakeadmin);
+            await _context.SaveChangesAsync();
+
+            return Ok(usertomakeadmin);
+        }
+
+        [Authorize]
+        [HttpPut("superadmin/{id}")]
+        public async Task<IActionResult> MakeUserSuperAdmin(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            User usertomakeSuperAdmin = _context.Users.Where(u => u.Id == id).FirstOrDefault();
+            usertomakeSuperAdmin.Role = Role.SuperAdministrator;
+            _context.Update(usertomakeSuperAdmin);
+            await _context.SaveChangesAsync();
+
+            return Ok(usertomakeSuperAdmin);
         }
 
         private bool UserExists(int id)
