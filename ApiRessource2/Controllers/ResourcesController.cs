@@ -227,7 +227,7 @@ namespace ApiRessource2.Controllers
         {
             var resource = await _context.Resources.FindAsync(id);
             User user = (User)HttpContext.Items["User"];
-            if (user.Id == resource.UserId || user.Role == Role.Administrator || user.Role == Role.SuperAdministrator || user.Role == Role.Moderator)
+            if (user.Id == resource.UserId || user.Role == Role.Administrator || user.Role == Role.SuperAdministrator)
             {
                 if (resource == null)
                 {

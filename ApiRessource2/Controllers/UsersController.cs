@@ -9,6 +9,7 @@ using ApiRessource2.Models;
 using ApiRessource2.Services;
 //using ApiRessource2.Migrations;
 using ApiRessource2.Helpers;
+using System.Reflection.Metadata.Ecma335;
 
 namespace ApiRessource2.Controllers
 {
@@ -153,12 +154,20 @@ namespace ApiRessource2.Controllers
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null)
+            User usermod = (User)HttpContext.Items["User"];
+            if (usermod.Role == Role.Administrator || usermod.Role == Role.SuperAdministrator)
             {
-                return NotFound();
+                if (usermod == null)
+                {
+                    return NotFound();
+                }
+                if (user == null)
+                {
+                    return NotFound();
+                }
             }
-
-            _context.Users.Remove(user);
+            user.IsDeleted = true;
+            _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -214,6 +223,95 @@ namespace ApiRessource2.Controllers
 
             return Ok(usertomakeSuperAdmin);
         }
+
+        [Authorize]
+        [HttpGet("deleted")]
+        public async Task<ActionResult<IEnumerable<User>>> GetUsersSuspended()
+        {
+            return await _context.Users.Where(u=>u.IsDeleted == true).ToListAsync();
+        }
+
+        [Authorize]
+        [HttpPut("unban/{id}")]
+        public async Task<IActionResult> UnbanUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            User usermod = (User)HttpContext.Items["User"];
+            if (usermod.Role == Role.Administrator || usermod.Role == Role.SuperAdministrator)
+            {
+                if (usermod == null)
+                {
+                    return NotFound();
+                }
+                if (user == null)
+                {
+                    return NotFound();
+                }
+            }
+            user.IsDeleted = false;
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpPut("makemoderator/{id}")]
+        public async Task<IActionResult> MakeModerator(int id)
+        {
+            User user = _context.Users.Find(id);
+            User usersuper = (User)HttpContext.Items["User"];
+            if (usersuper.Role == Role.SuperAdministrator)
+            {
+                if (user == null)
+                {
+                    return NotFound();
+                }
+            }
+            user.Role = Role.Moderator;
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpPut("makeadmin/{id}")]
+        public async Task<IActionResult> MakeAdmin(int id)
+        {
+            User user = _context.Users.Find(id);
+            User usersuper = (User)HttpContext.Items["User"];
+            if (usersuper.Role == Role.SuperAdministrator)
+            {
+                if (user == null)
+                {
+                    return NotFound();
+                }
+            }
+            user.Role = Role.Administrator;
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpPut("makesuperadmin/{id}")]
+        public async Task<IActionResult> MakeSuperAdmin(int id)
+        {
+            User user = _context.Users.Find(id);
+            User usersuper = (User)HttpContext.Items["User"];
+            if (usersuper.Role == Role.SuperAdministrator)
+            {
+                if (user == null)
+                {
+                    return NotFound();
+                }
+            }
+            user.Role = Role.SuperAdministrator;
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
 
         private bool UserExists(int id)
         {
