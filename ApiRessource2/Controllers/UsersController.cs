@@ -312,6 +312,56 @@ namespace ApiRessource2.Controllers
             return NoContent();
         }
 
+        [Authorize]
+        [HttpPost("createuserwithrole")]
+        public async Task<IActionResult> createUserWithRole(PostUser postuser, Role role)
+        {
+            User usersuper = (User)HttpContext.Items["User"];
+            if (usersuper.Role == Role.SuperAdministrator)
+            {
+                if (postuser == null ||  role == null)
+                {
+                    return BadRequest("Il faut envoyer les information d'un uttilisateur ET un role mon pote");
+                }
+            }
+            if (!Tools.IsEmailValid(postuser.Email))
+                return BadRequest("Une adresse mail valide doit etre rentré.");
+            if (!Tools.IsValidPhoneNumber(postuser.PhoneNumber))
+                return BadRequest("Un numéro de téléphone valide doit etre rentré et doit respecter ce format : +33XXXXXXX .");
+            if (!Tools.IsValidPassword(postuser.Password))
+                return BadRequest("Le mot de passe ne convient pas car il ne contient pas : 1 majuscule, 1 minuscule, 1 chiffre, 1 caractère spécial et 8 caractère minimum.");
+            //TODO: vérifier si email et pseudo unique, a faire dans la base en modifiant les class peut etre ?
+            User checkUser = _context.Users.Where(u => u.Email == postuser.Email).FirstOrDefault();
+            if (checkUser != null)
+            {
+                return BadRequest("L'adresse mail est deja uttilisée");
+            }
+
+            checkUser = _context.Users.Where(u => u.Username == postuser.Username).FirstOrDefault();
+            if (checkUser != null)
+            {
+                return BadRequest("Le nom d'uttilisateur est deja uttilisé");
+            }
+
+            User user = new User()
+            {
+                FirstName = postuser.FirstName,
+                LastName = postuser.LastName,
+                Email = postuser.Email,
+                Username = postuser.Username,
+                PhoneNumber = postuser.PhoneNumber,
+                Password = Tools.HashCode(postuser.Password),
+                CreationDate = DateTime.UtcNow,
+                IsConfirmed = false,
+                IsDeleted = false,
+                Role = role,
+                ZoneGeoId = 10
+            };
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+        }
 
         private bool UserExists(int id)
         {
