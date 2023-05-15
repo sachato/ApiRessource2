@@ -33,18 +33,32 @@ namespace ApiRessource2.Controllers
 
         // GET: api/Resources
         [HttpGet]
-        public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter, TriType triType, [System.Web.Http.FromUri] string? search = "")
+        public async Task<IActionResult> GetResources([FromQuery] PaginationFilter filter, TriType triType, [System.Web.Http.FromUri] string? search = "", TypeRessource? categorie = null)
         {
             var resource = new List<Resource>();
             try
             {
                 var route = Request.Path.Value;
                 var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
-                var query = _context.Resources
-                   .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
-                   .Take(validFilter.PageSize)
-                   .Include(r => r.User)
-                   .AsQueryable();
+                IQueryable<Resource> query;
+                if (categorie == null)
+                {
+                    query = _context.Resources
+                                       .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                                       .Take(validFilter.PageSize)
+                                       .Include(r => r.User)
+                                       .AsQueryable();
+                }
+                else
+                {
+                    query = _context.Resources
+                        .Where(r => r.Type == categorie)
+                        .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                        .Take(validFilter.PageSize)
+                        .Include(r => r.User)
+                        .AsQueryable();
+                }
+                
                 
 
                 if(search != "" && search != null)
@@ -67,6 +81,10 @@ namespace ApiRessource2.Controllers
                 if (triType == TriType.DateDesc)
                 {
                     resource = await query.OrderByDescending(q => q.CreationDate).ThenBy(q => q.CreationDate.TimeOfDay).ToListAsync();
+                }
+                if(triType == TriType.Catégorie)
+                {
+                    resource = await query.ToListAsync();
                 }
                 foreach (var item in resource)
                 {
@@ -352,6 +370,18 @@ namespace ApiRessource2.Controllers
 
 
             return NoContent();
+        }
+
+        [HttpGet("ressourcetype")]
+        public async Task<IActionResult> RessourceType()
+        {
+            IDictionary<string, int> enumValues = new Dictionary<string, int>();
+
+            foreach (var value in Enum.GetValues(typeof(TypeRessource)))
+            {
+                enumValues.Add(value.ToString(), (int)value);
+            }
+            return Ok(enumValues);
         }
 
 

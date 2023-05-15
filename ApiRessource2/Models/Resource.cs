@@ -3,7 +3,7 @@ using System.Diagnostics.Eventing.Reader;
 
 namespace ApiRessource2.Models
 {
-    public enum TypeRessource { Photo, Lien, Texte, Document};
+    public enum TypeRessource { Photo, Lien, Texte, Document, Jeu, Evenement};
     public class Resource
     {
         public int Id { get; set; }
