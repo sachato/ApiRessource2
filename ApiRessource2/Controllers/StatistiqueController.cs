@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiRessource2.Models;
-using ApiRessource2.Services;
-//using ApiRessource2.Migrations;
+using System.Security.Claims;
 using ApiRessource2.Helpers;
-using System.Reflection.Metadata.Ecma335;
+using System.Linq;
 
 namespace ApiRessource2.Controllers
 {
@@ -18,81 +12,46 @@ namespace ApiRessource2.Controllers
     public class StatistiqueController : ControllerBase
     {
         private readonly DataContext _context;
-        private IUserService _userService;
+
+        public StatistiqueController(DataContext context)
+        {
+            _context = context;
+        }
 
         // GET: StatistiqueController
-        public ActionResult Index()
+        [HttpGet("nbconsulatationlasmonth")]
+        public async Task<ActionResult<int>> NbRessourceConsulteLastMonth()
         {
-            return View();
+            List<int> list = new List<int>();
+            DateTime lastmonth = DateTime.Now.AddDays(-29);
+            List<Consultation> lstConsultation = await _context.Consultations.Where(objet => objet.Date >= lastmonth && objet.Date <= DateTime.Now).ToListAsync();
+            return Ok(lstConsultation.Count);
         }
 
-        // GET: StatistiqueController/Details/5
-        public ActionResult Details(int id)
+        [HttpGet("nbconsulatationlasmonthperday")]
+        public async Task<ActionResult<IEnumerable<int>>> NbRessourceConsulteLastMonthPerDay()
         {
-            return View();
-        }
+            List<int> list = new List<int>();
+            DateTime lastmonth = DateTime.Now.AddDays(-29);
+            List<Consultation> lstConsultation = await _context.Consultations.Where(objet => objet.Date >= lastmonth && objet.Date <= DateTime.Now).ToListAsync();
+            // Obtenir la date du dernier jour (aujourd'hui)
+            DateTime dernierJour = DateTime.Now.Date;
 
-        // GET: StatistiqueController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
+            // Obtenir la date du premier jour (il y a précisément 30 jours)
+            DateTime premierJour = dernierJour.AddDays(-29);
 
-        // POST: StatistiqueController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
+            // Créer le tableau du nombre de dates par jour
+            var tableauNombreDates = new List<int>();
+
+            // Parcourir les jours entre le premier et le dernier jour
+            DateTime jourCourant = premierJour;
+            while (jourCourant <= dernierJour)
             {
-                return RedirectToAction(nameof(Index));
+                int nombreDates = lstConsultation.Count(c => c.Date.Date == jourCourant);
+                tableauNombreDates.Add(nombreDates);
+                jourCourant = jourCourant.AddDays(1);
             }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: StatistiqueController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: StatistiqueController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: StatistiqueController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: StatistiqueController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            return Ok(tableauNombreDates);
         }
     }
 }
