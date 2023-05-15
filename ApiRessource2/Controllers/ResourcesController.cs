@@ -159,7 +159,7 @@ namespace ApiRessource2.Controllers
             User user = (User)HttpContext.Items["User"];
             var resource = await _context.Resources.FindAsync(id);
 
-            if(user.Id != resource.UserId)
+            if(user.Id != resource.UserId )
             {
                 return BadRequest("Impossible de modifier cette ressource.");
             }
